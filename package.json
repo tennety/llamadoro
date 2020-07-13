@@ -1,0 +1,12 @@
+{
+  "name": "llamadoro",
+  "version": "1.0.0",
+  "description": "Increase your fitness while you work!",
+  "main": "index.js",
+  "author": "Chandu Tennety <chandu.tennety@gmail.com>",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "tauri": "^0.9.1"
+  }
+}
