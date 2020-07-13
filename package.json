@@ -1,12 +1,48 @@
 {
   "name": "llamadoro",
   "version": "1.0.0",
-  "description": "Increase your fitness while you work!",
+  "description": "Improve your fitness while you work!",
   "main": "index.js",
   "author": "Chandu Tennety <chandu.tennety@gmail.com>",
   "license": "MIT",
   "private": false,
   "dependencies": {
     "tauri": "^0.9.1"
-  }
+  },
+  "devDependencies": {
+    "@fullhuman/postcss-purgecss": "^1.2.0",
+    "autoprefixer": "^9.6.1",
+    "elm": "^0.19.1-2",
+    "elm-hot": "^1.0.1",
+    "netlify-cli": "^2.19.0",
+    "node-elm-compiler": "^5.0.4",
+    "parcel-bundler": "^1.12.3",
+    "sass": "^1.22.4",
+    "tailwindcss": "^1.0.5"
+  },
+  "scripts": {
+    "dev": "netlify dev -p 8888",
+    "dev:live": "netlify dev --live",
+    "deploy": "npm run build && netlify deploy",
+    "deploy:prod": "netlify deploy --prod",
+    "start": "npm run build-img && parcel index.html",
+    "build-img": "parcel build img/*",
+    "build": "npm run build-img && parcel build index.html --no-cache",
+    "test": "elm-test",
+    "test:watch": "elm-test --watch",
+    "cypress": "cypress run",
+    "cypress:open": "cypress open"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cedricss/elm-batteries.git"
+  },
+  "keywords": [
+    "elm",
+    "parcel",
+    "tailwind",
+    "purgecss",
+    "cypress",
+    "netlify"
+  ]
 }
