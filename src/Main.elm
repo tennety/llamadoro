@@ -3,9 +3,9 @@ module Main exposing (main)
 import Browser
 import Browser.Navigation as Nav
 import Data
-import Html.Styled exposing (..)
-import Html.Styled.Attributes exposing (attribute, class, disabled, href)
-import Html.Styled.Events exposing (onClick)
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (onClick)
 import Http
 import RemoteData exposing (RemoteData)
 import Route exposing (Route(..))
@@ -67,7 +67,7 @@ project =
 view : Model -> Browser.Document Msg
 view model =
     { title = project.title
-    , body = [ body model |> div [] |> toUnstyled ]
+    , body = [ body model |> div [] ]
     }
 
 

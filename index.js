@@ -1,5 +1,4 @@
 import { Elm } from "./src/Main.elm";
-import "./scss/style.scss";
 
 if (module.hot) {
   module.hot.dispose(() => {
