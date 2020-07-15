@@ -8,9 +8,10 @@ import Url.Parser as Parser exposing ((</>), Parser, map, oneOf, s, top)
 
 
 type Route
-    = ApiDemo
-    | Home
+    = Home
     | NotFound
+    | Settings
+    | Exercises
 
 
 parser : Parser (Route -> a) a
@@ -18,7 +19,8 @@ parser =
     oneOf
         [ map Home top
         , map Home (s "index.html")
-        , map ApiDemo (s "demo")
+        , map Settings (s "settings")
+        , map Exercises (s "exercises")
 
         --  Add more routes like this:
         --  , map Comment (s "user" </> string </> s "comment" </> int)

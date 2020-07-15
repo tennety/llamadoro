@@ -1,76 +1,38 @@
 module View exposing
     ( container
     , header
-    , keyValue
-    , navIn
-    , navOut
     , notFound
     )
 
-import Html exposing (..)
-import Html.Attributes exposing (..)
+import Element exposing (Element, column, el, layout, link, text)
+import Element.Region exposing (heading)
 
 
 
 -- HEADER
 
 
-header : List (Html msg) -> Html msg
+header : List (Element msg) -> Element msg
 header items =
-    div
-        [ class "fixed top-0 inset-x-0 bg-white border-b border-gray-300" -- Tailwind utilities: https://tailwindcss.com
+    Element.row
+        []
+    <|
+        [ link []
+            { url = "/"
+            , label = text "Llamadoro"
+            }
         ]
-        [ div
-            [ class "container mx-auto h-full"
-            , class "flex items-center px-6"
-            ]
-            [ a
-                [ attribute "data-test" "logo"
-                , class "flex items-center"
-                , href "/"
-                ]
-                [ div
-                    [ class "bg-indigo-600 w-4 h-4 rounded-full mr-2" ]
-                    []
-                , p
-                    [ class "font-bold uppercase text-sm text-gray-800" ]
-                    [ text "Hello" ]
-                ]
-            , ul
-                [ attribute "data-test" "menu"
-                , class "flex-grow"
-                , class "flex justify-end"
-                ]
-                items
-            ]
-        ]
-
-
-item : String -> List (Attribute msg) -> Html msg
-item name attributes =
-    li [ class "mr-6" ] [ a attributes [ text name ] ]
-
-
-navIn : String -> String -> Html msg
-navIn name url =
-    item name [ href url ]
-
-
-navOut : String -> String -> Html msg
-navOut name url =
-    item name [ href url, target "_blank", class "external" ]
+            ++ items
 
 
 
 -- CONTAINER
 
 
-container : List (Html msg) -> Html msg
+container : List (Element msg) -> Element msg
 container content =
-    div
-        [ attribute "data-test" "content"
-        , class "container mx-auto py-10 px-4"
-        ]
+    column
+        []
         content
 
 
@@ -78,34 +40,19 @@ container content =
 -- DEFAULT PAGES
 
 
-notFound : List (Html msg)
+notFound : List (Element msg)
 notFound =
-    [ h1
+    [ el [ heading 1 ] (text "404")
+    , el [] (text "Sorry, we could not find this page.")
+    , el
         []
-        [ div [ class "text-2xl text-gray-500" ] [ text "404" ]
-        , text "Sorry, we could not find this page."
-        ]
-    , p
-        []
-        [ a
-            [ class "btn", href "/" ]
-            [ text "Home" ]
-        ]
+        (link []
+            { url = "/"
+            , label = text "Home"
+            }
+        )
     ]
 
 
 
 -- MISC
-
-
-keyValue : String -> String -> List (Html msg)
-keyValue key value =
-    [ span
-        [ class "inline-block mr-6 w-12"
-        , class "text-gray-600 text-right text-xs uppercase"
-        ]
-        [ text key ]
-    , span
-        [ attribute "data-value" key ]
-        [ text value ]
-    ]
