@@ -94,12 +94,18 @@ viewHome model =
     ]
 
 
-viewSettings =
-    Debug.todo "settings view"
+viewSettings : Model -> List (Element Msg)
+viewSettings model =
+    [ el [ heading 1 ] (Element.text "Llamadoro - Settings")
+    , el [] (Element.text project.description)
+    ]
 
 
-viewExercises =
-    Debug.todo "exercise list"
+viewExercises : Model -> List (Element Msg)
+viewExercises model =
+    [ el [ heading 1 ] (Element.text "Llamadoro - Exercises")
+    , el [] (Element.text project.description)
+    ]
 
 
 
