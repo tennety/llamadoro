@@ -2,16 +2,25 @@ module Main exposing (main)
 
 import Browser
 import Browser.Navigation as Nav
-import Element exposing (Element, column, el, layout, link, text)
+import Element exposing (Element, centerX, column, el, layout, link, text)
+import Element.Font as Font exposing (size)
 import Element.Region exposing (heading)
 import Html exposing (Html)
+import Palette
 import Route exposing (Route(..))
+import Time
+import TypedTime exposing (TypedTime)
 import Url exposing (Url)
 import View
 
 
 type alias Flags =
     {}
+
+
+type Stage
+    = Work
+    | Break -- exercise
 
 
 
@@ -21,13 +30,15 @@ type alias Flags =
 type alias Model =
     { key : Nav.Key
     , route : Route.Route
+    , timeRemaining : TypedTime
+    , currentStage : Stage
     }
 
 
 type Msg
-    = -- Message naming conventions: https://youtu.be/w6OVDBqergc
-      BrowserChangedUrl Url
+    = BrowserChangedUrl Url
     | UserClickedLink Browser.UrlRequest
+    | Tick Time.Posix
 
 
 main : Program Flags Model Msg
@@ -64,47 +75,40 @@ view model =
 
 body : Model -> Html Msg
 body model =
-    layout [] <|
-        column []
-            [ View.header
-                [ link [] { label = text "Home", url = "/" }
-                , link [] { label = text "Settings", url = "/settings" }
-                , link [] { label = text "Exercises", url = "/exercises" }
-                ]
-            , View.container <|
-                case model.route of
-                    Home ->
-                        viewHome model
+    layout [ centerX ] <|
+        column [ centerX ] <|
+            case model.route of
+                Home ->
+                    viewHome model
 
-                    Settings ->
-                        viewSettings model
+                Settings ->
+                    viewSettings model
 
-                    Exercises ->
-                        viewExercises model
+                Exercises ->
+                    viewExercises model
 
-                    NotFound ->
-                        View.notFound
-            ]
+                NotFound ->
+                    View.notFound
 
 
 viewHome : Model -> List (Element Msg)
 viewHome model =
-    [ el [ heading 1 ] (Element.text "Llamadoro")
-    , el [] (Element.text project.description)
+    [ el [ centerX, heading 1 ] (text "Llamadoro")
+    , el [ Font.size (Palette.scaled 10), Font.center ] (model.timeRemaining |> TypedTime.toString TypedTime.Seconds |> text)
     ]
 
 
 viewSettings : Model -> List (Element Msg)
 viewSettings model =
-    [ el [ heading 1 ] (Element.text "Llamadoro - Settings")
-    , el [] (Element.text project.description)
+    [ el [ heading 1 ] (text "Llamadoro - Settings")
+    , el [] (text project.description)
     ]
 
 
 viewExercises : Model -> List (Element Msg)
 viewExercises model =
-    [ el [ heading 1 ] (Element.text "Llamadoro - Exercises")
-    , el [] (Element.text project.description)
+    [ el [ heading 1 ] (text "Llamadoro - Exercises")
+    , el [] (text project.description)
     ]
 
 
@@ -132,6 +136,9 @@ update msg model =
                     , Nav.load url
                     )
 
+        Tick _ ->
+            ( { model | timeRemaining = TypedTime.sub model.timeRemaining (TypedTime.seconds 1) }, Cmd.none )
+
 
 init : Flags -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key =
@@ -141,6 +148,8 @@ init flags url key =
     in
     ( { key = key
       , route = route
+      , timeRemaining = TypedTime.minutes 25.0
+      , currentStage = Work
       }
     , Cmd.none
     )
@@ -149,3 +158,7 @@ init flags url key =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
+
+
+
+-- Time.every 1000 Tick
