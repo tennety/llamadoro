@@ -34,6 +34,11 @@ type alias Stage =
     }
 
 
+type Mode
+    = Running
+    | Paused
+
+
 
 -- MODEL
 
@@ -42,6 +47,7 @@ type alias Model =
     { key : Nav.Key
     , route : Route.Route
     , currentStage : Stage
+    , mode : Mode
     }
 
 
@@ -172,6 +178,7 @@ init flags url key =
             { activity = Work
             , timeRemaining = workInterval
             }
+      , mode = Paused
       }
     , Cmd.none
     )
@@ -201,5 +208,9 @@ countDownOrNext stage =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    -- Sub.none
-    Time.every 1000 Tick
+    case model.mode of
+        Paused ->
+            Sub.none
+
+        Running ->
+            Time.every 1000 Tick
