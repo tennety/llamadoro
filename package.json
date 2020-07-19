@@ -16,7 +16,8 @@
     "elm-hot": "^1.0.1",
     "netlify-cli": "^2.19.0",
     "node-elm-compiler": "^5.0.4",
-    "parcel-bundler": "^1.12.3"
+    "parcel-bundler": "^1.12.3",
+    "sass": "^1.26.10"
   },
   "scripts": {
     "dev": "netlify dev -p 8888",

@@ -102,9 +102,8 @@ viewHome stage =
         { activity, timeRemaining } =
             Stage.toString stage
     in
-    [ el [ centerX, heading 1 ] (text "Llamadoro")
-    , el [ Font.size (Palette.scaled 2), Font.center ] (text activity)
-    , el [ Font.size (Palette.scaled 10), Font.center ] (text timeRemaining)
+    [ Palette.heading 2 [ text activity ]
+    , Palette.timer timeRemaining
     ]
 
 

@@ -1,4 +1,4 @@
-module Palette exposing (blogHeading, color, fromElmColor, heading, scaled)
+module Palette exposing (color, fromElmColor, heading, scaled, timer)
 
 import Color
 import Element exposing (Element)
@@ -30,7 +30,8 @@ heading : Int -> List (Element msg) -> Element msg
 heading level content =
     Element.paragraph
         ([ Font.regular
-         , Font.family [ Font.typeface "IM Fell English" ]
+         , Font.family [ Font.typeface "Asap" ]
+         , Font.color color.darker
          , Element.Region.heading level
          ]
             ++ (case level of
@@ -50,13 +51,15 @@ heading level content =
         content
 
 
-blogHeading : String -> Element msg
-blogHeading title =
-    Element.paragraph
+timer :
+    String
+    -> Element msg -- TODO: take type of activity, expose from Stage?
+timer content =
+    Element.el
         [ Font.regular
-        , Font.family [ Font.typeface "IM Fell English" ]
-        , Element.Region.heading 1
-        , Font.size (scaled 4)
-        , Font.center
+        , Font.family [ Font.typeface "Asap" ]
+        , Font.size (scaled 10)
+        , Font.heavy
+        , Font.color color.neutral
         ]
-        [ Element.text title ]
+        (Element.text content)
