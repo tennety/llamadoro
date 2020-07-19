@@ -18,17 +18,13 @@
             "elm/url": "1.0.0",
             "elm-explorations/markdown": "1.0.0",
             "ianmackenzie/elm-units": "2.6.0",
-            "jxxcarlson/elm-typed-time": "1.2.0",
             "krisajenkins/remotedata": "6.0.1",
             "mdgriffith/elm-ui": "1.1.7"
         },
         "indirect": {
             "elm/bytes": "1.0.8",
             "elm/file": "1.0.5",
-            "elm/parser": "1.1.0",
-            "elm/virtual-dom": "1.0.2",
-            "elm-community/list-extra": "8.2.4",
-            "elm-community/maybe-extra": "5.2.0"
+            "elm/virtual-dom": "1.0.2"
         }
     },
     "test-dependencies": {

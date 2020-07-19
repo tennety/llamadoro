@@ -2,15 +2,14 @@ module Main exposing (main)
 
 import Browser
 import Browser.Navigation as Nav
-import Element exposing (Element, centerX, column, el, layout, link, text)
+import Element exposing (Element, centerX, column, el, layout, text)
 import Element.Font as Font exposing (size)
-import Element.Input exposing (currentPassword)
 import Element.Region exposing (heading)
 import Html exposing (Html)
 import Palette
 import Route exposing (Route(..))
+import Stage
 import Time
-import TypedTime exposing (TypedTime)
 import Url exposing (Url)
 import View
 
@@ -19,19 +18,9 @@ type alias Flags =
     {}
 
 
-type Exercise
-    = Exercise -- one of a collection (types, list, dict etc -- TBD)
 
-
-type Activity
-    = Work
-    | Break Exercise
-
-
-type alias Stage =
-    { timeRemaining : TypedTime
-    , activity : Activity
-    }
+-- type Exercise
+--     = Exercise -- one of a collection (types, list, dict etc -- TBD)
 
 
 type Mode
@@ -46,7 +35,7 @@ type Mode
 type alias Model =
     { key : Nav.Key
     , route : Route.Route
-    , currentStage : Stage
+    , currentStage : Stage.Model
     , mode : Mode
     }
 
@@ -107,20 +96,15 @@ body model =
                     View.notFound
 
 
-activityToString activity =
-    case activity of
-        Work ->
-            "work"
-
-        Break _ ->
-            "break"
-
-
-viewHome : Stage -> List (Element Msg)
+viewHome : Stage.Model -> List (Element Msg)
 viewHome stage =
+    let
+        { activity, timeRemaining } =
+            Stage.toString stage
+    in
     [ el [ centerX, heading 1 ] (text "Llamadoro")
-    , el [ Font.size (Palette.scaled 2), Font.center ] (text <| activityToString stage.activity)
-    , el [ Font.size (Palette.scaled 10), Font.center ] (stage.timeRemaining |> TypedTime.toString TypedTime.Seconds |> text)
+    , el [ Font.size (Palette.scaled 2), Font.center ] (text activity)
+    , el [ Font.size (Palette.scaled 10), Font.center ] (text timeRemaining)
     ]
 
 
@@ -163,7 +147,7 @@ update msg model =
                     )
 
         Tick _ ->
-            ( { model | currentStage = countDownOrNext model.currentStage }, Cmd.none )
+            ( { model | currentStage = Stage.update model.currentStage }, Cmd.none )
 
 
 init : Flags -> Url -> Nav.Key -> ( Model, Cmd Msg )
@@ -174,36 +158,11 @@ init flags url key =
     in
     ( { key = key
       , route = route
-      , currentStage =
-            { activity = Work
-            , timeRemaining = workInterval
-            }
+      , currentStage = Stage.initConfig |> Stage.toModel
       , mode = Paused
       }
     , Cmd.none
     )
-
-
-workInterval =
-    TypedTime.minutes 25.0
-
-
-breakInterval =
-    TypedTime.minutes 5
-
-
-countDownOrNext : Stage -> Stage
-countDownOrNext stage =
-    if stage.timeRemaining |> TypedTime.equal (TypedTime.seconds 0.0) then
-        case stage.activity of
-            Work ->
-                Stage breakInterval (Break Exercise)
-
-            Break _ ->
-                Stage workInterval Work
-
-    else
-        { stage | timeRemaining = TypedTime.sub stage.timeRemaining (TypedTime.seconds 1.0) }
 
 
 subscriptions : Model -> Sub Msg
