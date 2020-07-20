@@ -3,12 +3,11 @@ module Main exposing (main)
 import Browser
 import Browser.Navigation as Nav
 import Element exposing (Element, centerX, column, el, layout, text)
-import Element.Font as Font exposing (size)
 import Element.Region exposing (heading)
 import Html exposing (Html)
 import Palette
 import Route exposing (Route(..))
-import Stage
+import Stage exposing (Activity(..))
 import Time
 import Url exposing (Url)
 import View
@@ -99,11 +98,18 @@ body model =
 viewHome : Stage.Model -> List (Element Msg)
 viewHome stage =
     let
-        { activity, timeRemaining } =
-            Stage.toString stage
+        timerColor =
+            case stage.currentStage.activity of
+                Work ->
+                    Palette.color.busy
+
+                Break ->
+                    Palette.color.free
     in
-    [ Palette.heading 2 [ text activity ]
-    , Palette.timer timeRemaining
+    [ Element.column
+        [ Element.paddingXY 0 100 ]
+        [ Palette.timer timerColor (Stage.inMinutesAndSeconds stage.currentStage.timeRemaining)
+        ]
     ]
 
 
@@ -158,7 +164,7 @@ init flags url key =
     ( { key = key
       , route = route
       , currentStage = Stage.initConfig |> Stage.toModel
-      , mode = Paused
+      , mode = Running
       }
     , Cmd.none
     )

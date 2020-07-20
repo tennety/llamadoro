@@ -1,9 +1,10 @@
 module Stage exposing
-    ( Config
+    ( Activity(..)
+    , Config
     , Model
+    , inMinutesAndSeconds
     , initConfig
     , toModel
-    , toString
     , update
     , withLongBreakAfterCount
     , withLongBreakInterval
@@ -76,15 +77,19 @@ toModel config =
 
 
 update : Model -> Model
-update ({ config, currentStage, workDoneCount } as model) =
+update ({ config, currentStage } as model) =
     if timedOut currentStage.timeRemaining then
         case currentStage.activity of
             Work ->
-                if Basics.modBy config.longBreakAfterCount workDoneCount == 0 then
-                    { model | workDoneCount = model.workDoneCount + 1, currentStage = longBreak config }
+                let
+                    newModel =
+                        { model | workDoneCount = model.workDoneCount + 1 }
+                in
+                if Basics.modBy config.longBreakAfterCount newModel.workDoneCount == 0 then
+                    { newModel | currentStage = longBreak config }
 
                 else
-                    { model | workDoneCount = model.workDoneCount + 1, currentStage = shortBreak config }
+                    { newModel | currentStage = shortBreak config }
 
             Break ->
                 { model | currentStage = work config }
@@ -118,25 +123,8 @@ longBreak config =
     Stage config.longBreakInterval Break
 
 
-toString : Model -> { activity : String, timeRemaining : String }
-toString model =
-    { activity = activityToString model.currentStage.activity
-    , timeRemaining = timeToString model.currentStage.timeRemaining
-    }
-
-
-activityToString : Activity -> String
-activityToString activity =
-    case activity of
-        Work ->
-            "work"
-
-        Break ->
-            "break"
-
-
-timeToString : Duration -> String
-timeToString seconds =
+inMinutesAndSeconds : Duration -> String
+inMinutesAndSeconds seconds =
     [ seconds |> Duration.inMinutes
     , seconds |> Quantity.fractionalModBy Duration.minute |> Duration.inSeconds
     ]

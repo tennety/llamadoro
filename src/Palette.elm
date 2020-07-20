@@ -4,6 +4,7 @@ import Color
 import Element exposing (Element)
 import Element.Font as Font
 import Element.Region
+import String.Extra
 
 
 color =
@@ -14,6 +15,13 @@ color =
     , dark = Element.rgb255 0x4A 0x55 0x68
     , darker = Element.rgb255 0x2D 0x37 0x48
     , darkest = Element.rgb255 0x1A 0x20 0x2C
+
+    -- https://coolors.co/587291-69b578-ffec51-de6c83-0ad3ff
+    , free = Element.rgb255 105 181 120
+    , busy = Element.rgb255 222 108 131
+    , copy = Element.rgb255 88 114 145
+    , blue = Element.rgb255 10 211 255
+    , yellow = Element.rgb255 255 236 81
     }
 
 
@@ -51,15 +59,21 @@ heading level content =
         content
 
 
-timer :
-    String
-    -> Element msg -- TODO: take type of activity, expose from Stage?
-timer content =
+timer : Element.Color -> String -> Element msg
+timer activityColor content =
+    let
+        removeLeadingZero str =
+            if String.startsWith "0" str then
+                str |> String.Extra.replaceSlice "  " 0 1
+
+            else
+                str
+    in
     Element.el
         [ Font.regular
-        , Font.family [ Font.typeface "Asap" ]
+        , Font.family [ Font.typeface "Bungee Shade" ]
         , Font.size (scaled 10)
-        , Font.heavy
-        , Font.color color.neutral
+        , Font.color activityColor
+        , Element.width (Element.fill |> Element.minimum 540)
         ]
-        (Element.text content)
+        (content |> removeLeadingZero |> Element.text)
