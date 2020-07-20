@@ -2,7 +2,7 @@ module Main exposing (main)
 
 import Browser
 import Browser.Navigation as Nav
-import Element exposing (Element, centerX, column, el, layout, text)
+import Element exposing (Element, centerX, column, el, layout, paddingXY, text)
 import Element.Region exposing (heading)
 import Html exposing (Html)
 import Palette
@@ -106,9 +106,9 @@ viewHome stage =
                 Break ->
                     Palette.color.free
     in
-    [ Element.column
-        [ Element.paddingXY 0 100 ]
-        [ Palette.timer timerColor (Stage.inMinutesAndSeconds stage.currentStage.timeRemaining)
+    [ column
+        [ paddingXY 0 100 ]
+        [ View.timer timerColor (Stage.inMinutesAndSeconds stage.currentStage.timeRemaining)
         ]
     ]
 

@@ -77,13 +77,13 @@ toModel config =
 
 
 update : Model -> Model
-update ({ config, currentStage } as model) =
+update ({ config, currentStage, workDoneCount } as model) =
     if timedOut currentStage.timeRemaining then
         case currentStage.activity of
             Work ->
                 let
                     newModel =
-                        { model | workDoneCount = model.workDoneCount + 1 }
+                        { model | workDoneCount = workDoneCount + 1 }
                 in
                 if Basics.modBy config.longBreakAfterCount newModel.workDoneCount == 0 then
                     { newModel | currentStage = longBreak config }
