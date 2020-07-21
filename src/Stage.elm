@@ -1,10 +1,9 @@
 module Stage exposing
     ( Activity(..)
-    , Config
     , Model
-    , inMinutesAndSeconds
-    , initConfig
-    , toModel
+    , activity
+    , init
+    , timeRemainingMinSec
     , update
     , withLongBreakAfterCount
     , withLongBreakInterval
@@ -35,11 +34,13 @@ type alias Stage =
     }
 
 
-type alias Model =
-    { config : Config
-    , workDoneCount : Int
-    , currentStage : Stage
-    }
+type Model
+    = Model Config Int Stage
+
+
+init : Model
+init =
+    Model initConfig 0 (work initConfig)
 
 
 initConfig : Config
@@ -51,51 +52,54 @@ initConfig =
     }
 
 
-withWorkInterval : Duration -> Config -> Config
-withWorkInterval duration config =
-    { config | workInterval = duration }
+activity : Model -> Activity
+activity (Model config count stage) =
+    stage.activity
 
 
-withShortBreakInterval : Duration -> Config -> Config
-withShortBreakInterval duration config =
-    { config | shortBreakInterval = duration }
+withWorkInterval : Duration -> Model -> Model
+withWorkInterval duration (Model config count stage) =
+    Model { config | workInterval = duration } count stage
 
 
-withLongBreakInterval : Duration -> Config -> Config
-withLongBreakInterval duration config =
-    { config | longBreakInterval = duration }
+withShortBreakInterval : Duration -> Model -> Model
+withShortBreakInterval duration (Model config count stage) =
+    Model { config | shortBreakInterval = duration } count stage
 
 
-withLongBreakAfterCount : Int -> Config -> Config
-withLongBreakAfterCount count config =
-    { config | longBreakAfterCount = count }
+withLongBreakInterval : Duration -> Model -> Model
+withLongBreakInterval duration (Model config count stage) =
+    Model { config | longBreakInterval = duration } count stage
 
 
-toModel : Config -> Model
-toModel config =
-    Model config 0 (work config)
+withLongBreakAfterCount : Int -> Model -> Model
+withLongBreakAfterCount count (Model config count_ stage) =
+    Model { config | longBreakAfterCount = count } count_ stage
 
 
 update : Model -> Model
-update ({ config, currentStage, workDoneCount } as model) =
+update (Model config workDoneCount currentStage) =
     if timedOut currentStage.timeRemaining then
         case currentStage.activity of
             Work ->
                 let
-                    newModel =
-                        { model | workDoneCount = workDoneCount + 1 }
+                    readyFor =
+                        Model config (workDoneCount + 1)
+
+                    needsLongBreak =
+                        Basics.modBy config.longBreakAfterCount (workDoneCount + 1) == 0
                 in
-                if Basics.modBy config.longBreakAfterCount newModel.workDoneCount == 0 then
-                    { newModel | currentStage = longBreak config }
+                if needsLongBreak then
+                    readyFor (longBreak config)
 
                 else
-                    { newModel | currentStage = shortBreak config }
+                    readyFor (shortBreak config)
 
             Break ->
-                { model | currentStage = work config }
+                Model config workDoneCount (work config)
 
     else
-        { model | currentStage = countDown model.currentStage }
+        Model config workDoneCount (countDown currentStage)
 
 
 timedOut : Duration -> Basics.Bool
@@ -123,8 +127,12 @@ longBreak config =
     Stage config.longBreakInterval Break
 
 
-inMinutesAndSeconds : Duration -> String
-inMinutesAndSeconds seconds =
+timeRemainingMinSec : Model -> String
+timeRemainingMinSec (Model config count stage) =
+    let
+        seconds =
+            stage.timeRemaining
+    in
     [ seconds |> Duration.inMinutes
     , seconds |> Quantity.fractionalModBy Duration.minute |> Duration.inSeconds
     ]

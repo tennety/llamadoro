@@ -99,7 +99,7 @@ viewHome : Stage.Model -> List (Element Msg)
 viewHome stage =
     let
         timerColor =
-            case stage.currentStage.activity of
+            case Stage.activity stage of
                 Work ->
                     Palette.color.busy
 
@@ -108,7 +108,7 @@ viewHome stage =
     in
     [ column
         [ paddingXY 0 100 ]
-        [ View.timer timerColor (Stage.inMinutesAndSeconds stage.currentStage.timeRemaining)
+        [ View.timer timerColor (Stage.timeRemainingMinSec stage)
         ]
     ]
 
@@ -163,7 +163,7 @@ init flags url key =
     in
     ( { key = key
       , route = route
-      , currentStage = Stage.initConfig |> Stage.toModel
+      , currentStage = Stage.init
       , mode = Running
       }
     , Cmd.none
