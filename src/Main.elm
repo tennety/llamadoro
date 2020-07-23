@@ -2,8 +2,13 @@ module Main exposing (main)
 
 import Browser
 import Browser.Navigation as Nav
-import Element exposing (Element, centerX, column, el, layout, paddingXY, text)
+import Element exposing (Element, centerX, column, el, fill, height, html, layout, paddingXY, px, spacing, text, width)
+import Element.Background as Background
+import Element.Border exposing (rounded)
+import Element.Font as Font
+import Element.Input as Input
 import Element.Region exposing (heading)
+import Heroicons.Outline exposing (pause, play)
 import Html exposing (Html)
 import Palette
 import Route exposing (Route(..))
@@ -42,7 +47,9 @@ type alias Model =
 type Msg
     = BrowserChangedUrl Url
     | UserClickedLink Browser.UrlRequest
-    | Tick Time.Posix
+    | ReceivedTick Time.Posix
+    | UserClickedPause
+    | UserClickedPlay
 
 
 main : Program Flags Model Msg
@@ -79,11 +86,11 @@ view model =
 
 body : Model -> Html Msg
 body model =
-    layout [ centerX ] <|
+    layout [ Background.color Palette.color.yellow, width fill, height fill, centerX ] <|
         column [ centerX ] <|
             case model.route of
                 Home ->
-                    viewHome model.currentStage
+                    viewHome model.mode model.currentStage
 
                 Settings ->
                     viewSettings model
@@ -95,8 +102,8 @@ body model =
                     View.notFound
 
 
-viewHome : Stage.Model -> List (Element Msg)
-viewHome stage =
+viewHome : Mode -> Stage.Model -> List (Element Msg)
+viewHome mode stage =
     let
         timerColor =
             case Stage.activity stage of
@@ -107,8 +114,11 @@ viewHome stage =
                     Palette.color.free
     in
     [ column
-        [ paddingXY 0 100 ]
+        [ paddingXY 0 100
+        , spacing 50
+        ]
         [ View.timer timerColor (Stage.timeRemainingMinSec stage)
+        , playPauseButton mode
         ]
     ]
 
@@ -125,6 +135,27 @@ viewExercises model =
     [ el [ heading 1 ] (text "Llamadoro - Exercises")
     , el [] (text project.description)
     ]
+
+
+playPauseButton : Mode -> Element Msg
+playPauseButton mode =
+    let
+        ( icon, msg ) =
+            case mode of
+                Running ->
+                    ( pause [], UserClickedPause )
+
+                Paused ->
+                    ( play [], UserClickedPlay )
+
+        size =
+            Palette.scaled 6
+    in
+    Input.button
+        [ centerX, rounded (size // 2) ]
+        { onPress = Just msg
+        , label = el [ height (px size), width (px size), Font.color Palette.color.busy ] (html icon)
+        }
 
 
 
@@ -151,8 +182,14 @@ update msg model =
                     , Nav.load url
                     )
 
-        Tick _ ->
+        ReceivedTick _ ->
             ( { model | currentStage = Stage.update model.currentStage }, Cmd.none )
+
+        UserClickedPlay ->
+            ( { model | mode = Running }, Cmd.none )
+
+        UserClickedPause ->
+            ( { model | mode = Paused }, Cmd.none )
 
 
 init : Flags -> Url -> Nav.Key -> ( Model, Cmd Msg )
@@ -177,4 +214,4 @@ subscriptions model =
             Sub.none
 
         Running ->
-            Time.every 1000 Tick
+            Time.every 1000 ReceivedTick

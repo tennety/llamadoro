@@ -127,14 +127,13 @@ longBreak config =
     Stage config.longBreakInterval Break
 
 
-timeRemainingMinSec : Model -> String
+timeRemainingMinSec : Model -> ( Int, Int )
 timeRemainingMinSec (Model config count stage) =
     let
         seconds =
             stage.timeRemaining
     in
-    [ seconds |> Duration.inMinutes
+    ( seconds |> Duration.inMinutes
     , seconds |> Quantity.fractionalModBy Duration.minute |> Duration.inSeconds
-    ]
-        |> List.map (Basics.floor >> String.fromInt >> String.padLeft 2 '0')
-        |> String.join ":"
+    )
+        |> Tuple.mapBoth Basics.floor Basics.floor
