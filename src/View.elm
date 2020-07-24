@@ -77,7 +77,7 @@ timer activityColor ( mins, secs ) =
             [ width (fillPortion 4)
             , Font.alignRight
             ]
-            (mins |> String.fromInt |> text)
+            (mins |> String.fromInt |> String.padLeft 2 '0' |> text)
         , el
             [ width (fillPortion 1)
             , centerX

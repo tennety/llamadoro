@@ -2,7 +2,7 @@ module Main exposing (main)
 
 import Browser
 import Browser.Navigation as Nav
-import Element exposing (Element, centerX, column, el, fill, focused, height, html, layout, paddingXY, px, row, spacing, text, width)
+import Element exposing (Element, centerX, column, el, fill, focused, height, html, layout, padding, paddingXY, px, row, spacing, text, width)
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
@@ -114,12 +114,12 @@ viewHome mode stage =
                     Palette.color.free
     in
     [ column
-        [ paddingXY 0 100
+        [ paddingXY 0 50
         , spacing 50
         ]
         [ View.timer timerColor (Stage.timeRemainingMinSec stage)
         , row
-            [ centerX ]
+            [ centerX, Border.solid, Border.widthXY 0 5, Border.color Palette.color.copy, padding (Palette.scaled 2) ]
             [ playPauseButton (Palette.scaled 6) mode
             , resetButton (Palette.scaled 6)
             ]
@@ -141,6 +141,10 @@ viewExercises model =
     ]
 
 
+
+-- app buttons need: size, Msg, icon, description, color, (focus color?)
+
+
 playPauseButton : Int -> Mode -> Element Msg
 playPauseButton size mode =
     let
@@ -154,11 +158,11 @@ playPauseButton size mode =
     in
     Input.button
         [ Border.rounded (size // 2)
-        , focused [ Border.glow Palette.color.busy 1 ]
+        , focused [ Border.glow Palette.color.free 1 ]
         , Region.description desc
         ]
         { onPress = Just msg
-        , label = el [ height (px size), width (px size), Font.color Palette.color.busy ] (html icon)
+        , label = el [ height (px size), width (px size), Font.color Palette.color.free ] (html icon)
         }
 
 
