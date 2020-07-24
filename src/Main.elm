@@ -2,13 +2,12 @@ module Main exposing (main)
 
 import Browser
 import Browser.Navigation as Nav
-import Element exposing (Element, centerX, column, el, fill, height, html, layout, paddingXY, px, spacing, text, width)
-import Element.Background as Background
-import Element.Border exposing (rounded)
+import Element exposing (Element, centerX, column, el, fill, focused, height, html, layout, paddingXY, px, row, spacing, text, width)
+import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
-import Element.Region exposing (heading)
-import Heroicons.Outline exposing (pause, play)
+import Element.Region as Region
+import Heroicons.Solid exposing (pause, play, stop)
 import Html exposing (Html)
 import Palette
 import Route exposing (Route(..))
@@ -50,6 +49,7 @@ type Msg
     | ReceivedTick Time.Posix
     | UserClickedPause
     | UserClickedPlay
+    | UserClickedReset
 
 
 main : Program Flags Model Msg
@@ -86,7 +86,7 @@ view model =
 
 body : Model -> Html Msg
 body model =
-    layout [ Background.color Palette.color.yellow, width fill, height fill, centerX ] <|
+    layout [ width fill, height fill, centerX ] <|
         column [ centerX ] <|
             case model.route of
                 Home ->
@@ -118,43 +118,59 @@ viewHome mode stage =
         , spacing 50
         ]
         [ View.timer timerColor (Stage.timeRemainingMinSec stage)
-        , playPauseButton mode
+        , row
+            [ centerX ]
+            [ playPauseButton (Palette.scaled 6) mode
+            , resetButton (Palette.scaled 6)
+            ]
         ]
     ]
 
 
 viewSettings : Model -> List (Element Msg)
 viewSettings model =
-    [ el [ heading 1 ] (text "Llamadoro - Settings")
+    [ el [ Region.heading 1 ] (text "Llamadoro - Settings")
     , el [] (text project.description)
     ]
 
 
 viewExercises : Model -> List (Element Msg)
 viewExercises model =
-    [ el [ heading 1 ] (text "Llamadoro - Exercises")
+    [ el [ Region.heading 1 ] (text "Llamadoro - Exercises")
     , el [] (text project.description)
     ]
 
 
-playPauseButton : Mode -> Element Msg
-playPauseButton mode =
+playPauseButton : Int -> Mode -> Element Msg
+playPauseButton size mode =
     let
-        ( icon, msg ) =
+        ( icon, msg, desc ) =
             case mode of
                 Running ->
-                    ( pause [], UserClickedPause )
+                    ( pause [], UserClickedPause, "pause" )
 
                 Paused ->
-                    ( play [], UserClickedPlay )
-
-        size =
-            Palette.scaled 6
+                    ( play [], UserClickedPlay, "play" )
     in
     Input.button
-        [ centerX, rounded (size // 2) ]
+        [ Border.rounded (size // 2)
+        , focused [ Border.glow Palette.color.busy 1 ]
+        , Region.description desc
+        ]
         { onPress = Just msg
         , label = el [ height (px size), width (px size), Font.color Palette.color.busy ] (html icon)
+        }
+
+
+resetButton : Int -> Element Msg
+resetButton size =
+    Input.button
+        [ Border.rounded (size // 2)
+        , focused [ Border.glow Palette.color.busy 1 ]
+        , Region.description "stop"
+        ]
+        { onPress = Just UserClickedReset
+        , label = el [ height (px size), width (px size), Font.color Palette.color.busy ] (html (stop []))
         }
 
 
@@ -191,6 +207,9 @@ update msg model =
         UserClickedPause ->
             ( { model | mode = Paused }, Cmd.none )
 
+        UserClickedReset ->
+            ( { model | currentStage = Stage.init, mode = Paused }, Cmd.none )
+
 
 init : Flags -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key =
@@ -201,7 +220,7 @@ init flags url key =
     ( { key = key
       , route = route
       , currentStage = Stage.init
-      , mode = Running
+      , mode = Paused
       }
     , Cmd.none
     )

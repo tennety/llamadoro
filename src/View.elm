@@ -66,10 +66,12 @@ timer : Element.Color -> ( Int, Int ) -> Element msg
 timer activityColor ( mins, secs ) =
     row
         [ Font.family [ Palette.fontFamily.display ]
-        , Font.size (Palette.scaled 10)
+        , Font.size (Palette.scaled 8)
+        , Font.heavy
         , Font.color activityColor
         , centerX
-        , width (fill |> minimum 630)
+        , width (fill |> minimum 405)
+        , Region.description <| String.fromInt mins ++ " minutes remaining."
         ]
         [ el
             [ width (fillPortion 4)
