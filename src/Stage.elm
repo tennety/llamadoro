@@ -3,6 +3,7 @@ module Stage exposing
     , Model
     , activity
     , init
+    , reset
     , timeRemainingMinSec
     , update
     , withLongBreakAfterCount
@@ -43,6 +44,9 @@ init =
     Model initConfig 0 (work initConfig)
 
 
+reset : Model -> Model
+reset (Model config count stage) =
+    Model config count (work config)
 initConfig : Config
 initConfig =
     { workInterval = Duration.minutes 25

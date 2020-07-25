@@ -212,7 +212,7 @@ update msg model =
             ( { model | mode = Paused }, Cmd.none )
 
         UserClickedReset ->
-            ( { model | currentStage = Stage.init, mode = Paused }, Cmd.none )
+            ( { model | currentStage = Stage.reset model.currentStage, mode = Paused }, Cmd.none )
 
 
 init : Flags -> Url -> Nav.Key -> ( Model, Cmd Msg )
