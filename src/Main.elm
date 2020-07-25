@@ -9,6 +9,7 @@ import Element.Input as Input
 import Element.Region as Region
 import Heroicons.Solid exposing (pause, play, stop)
 import Html exposing (Html)
+import Json.Decode as Decode
 import Palette
 import Route exposing (Route(..))
 import Stage exposing (Activity(..))
@@ -18,12 +19,9 @@ import View
 
 
 type alias Flags =
-    {}
-
-
-
--- type Exercise
---     = Exercise -- one of a collection (types, list, dict etc -- TBD)
+    { config : Decode.Value
+    , exercises : Decode.Value
+    }
 
 
 type Mode
@@ -110,7 +108,7 @@ viewHome mode stage =
                 Work ->
                     Palette.color.busy
 
-                Break ->
+                Break _ ->
                     Palette.color.free
     in
     [ column
@@ -223,7 +221,7 @@ init flags url key =
     in
     ( { key = key
       , route = route
-      , currentStage = Stage.init
+      , currentStage = Stage.initWithConfig flags.config
       , mode = Paused
       }
     , Cmd.none
