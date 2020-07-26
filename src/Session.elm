@@ -1,4 +1,4 @@
-module Stage exposing
+module Session exposing
     ( Activity(..)
     , IntervalLength(..)
     , Model
@@ -15,7 +15,7 @@ module Stage exposing
     )
 
 import Duration exposing (Duration)
-import Json.Decode as Decode exposing (Decoder, decodeString, decodeValue, int)
+import Json.Decode as Decode exposing (Decoder, decodeValue, int)
 import Json.Decode.Pipeline exposing (required)
 import Quantity
 
@@ -38,14 +38,14 @@ type alias Config =
     }
 
 
-type alias Stage =
+type alias Session =
     { activity : Activity
     , timeRemaining : Duration
     }
 
 
 type Model
-    = Model Config Int Stage
+    = Model Config Int Session
 
 
 init : Model
@@ -64,7 +64,7 @@ initWithConfig configJson =
 
 
 reset : Model -> Model
-reset (Model config count stage) =
+reset (Model config count _) =
     Model config count (work config)
 
 
@@ -78,7 +78,7 @@ initConfig =
 
 
 activity : Model -> Activity
-activity (Model config count stage) =
+activity (Model _ _ stage) =
     stage.activity
 
 
@@ -132,28 +132,28 @@ timedOut time =
     time |> Quantity.equalWithin Quantity.zero (Duration.seconds 0)
 
 
-countDown : Stage -> Stage
+countDown : Session -> Session
 countDown stage =
     { stage | timeRemaining = Quantity.minus Duration.second stage.timeRemaining }
 
 
-work : Config -> Stage
+work : Config -> Session
 work config =
-    Stage Work config.workInterval
+    Session Work config.workInterval
 
 
-shortBreak : Config -> Stage
+shortBreak : Config -> Session
 shortBreak config =
-    Stage (Break Short) config.shortInterval
+    Session (Break Short) config.shortInterval
 
 
-longBreak : Config -> Stage
+longBreak : Config -> Session
 longBreak config =
-    Stage (Break Long) config.longInterval
+    Session (Break Long) config.longInterval
 
 
 timeRemainingMinSec : Model -> ( Int, Int )
-timeRemainingMinSec (Model config count stage) =
+timeRemainingMinSec (Model _ _ stage) =
     let
         seconds =
             stage.timeRemaining

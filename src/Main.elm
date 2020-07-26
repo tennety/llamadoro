@@ -12,7 +12,7 @@ import Html exposing (Html)
 import Json.Decode as Decode
 import Palette
 import Route exposing (Route(..))
-import Stage exposing (Activity(..))
+import Session exposing (Activity(..))
 import Time
 import Url exposing (Url)
 import View
@@ -36,7 +36,7 @@ type Mode
 type alias Model =
     { key : Nav.Key
     , route : Route.Route
-    , currentStage : Stage.Model
+    , currentSession : Session.Model
     , mode : Mode
     }
 
@@ -88,7 +88,7 @@ body model =
         column [ centerX ] <|
             case model.route of
                 Home ->
-                    viewHome model.mode model.currentStage
+                    viewHome model.mode model.currentSession
 
                 Settings ->
                     viewSettings model
@@ -100,11 +100,11 @@ body model =
                     View.notFound
 
 
-viewHome : Mode -> Stage.Model -> List (Element Msg)
-viewHome mode stage =
+viewHome : Mode -> Session.Model -> List (Element Msg)
+viewHome mode session =
     let
         timerColor =
-            case Stage.activity stage of
+            case Session.activity session of
                 Work ->
                     Palette.color.busy
 
@@ -115,7 +115,7 @@ viewHome mode stage =
         [ paddingXY 0 50
         , spacing 50
         ]
-        [ View.timer timerColor (Stage.timeRemainingMinSec stage)
+        [ View.timer timerColor (Session.timeRemainingMinSec session)
         , row
             [ centerX, Border.solid, Border.widthXY 0 5, Border.color Palette.color.copy, padding (Palette.scaled 2) ]
             [ playPauseButton (Palette.scaled 6) mode
@@ -201,7 +201,7 @@ update msg model =
                     )
 
         ReceivedTick _ ->
-            ( { model | currentStage = Stage.update model.currentStage }, Cmd.none )
+            ( { model | currentSession = Session.update model.currentSession }, Cmd.none )
 
         UserClickedPlay ->
             ( { model | mode = Running }, Cmd.none )
@@ -210,7 +210,7 @@ update msg model =
             ( { model | mode = Paused }, Cmd.none )
 
         UserClickedReset ->
-            ( { model | currentStage = Stage.reset model.currentStage, mode = Paused }, Cmd.none )
+            ( { model | currentSession = Session.reset model.currentSession, mode = Paused }, Cmd.none )
 
 
 init : Flags -> Url -> Nav.Key -> ( Model, Cmd Msg )
@@ -221,7 +221,7 @@ init flags url key =
     in
     ( { key = key
       , route = route
-      , currentStage = Stage.initWithConfig flags.config
+      , currentSession = Session.initWithConfig flags.config
       , mode = Paused
       }
     , Cmd.none
