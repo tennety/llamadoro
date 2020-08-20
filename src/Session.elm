@@ -3,9 +3,9 @@ module Session exposing
     , IntervalLength(..)
     , Model
     , activity
-    , init
     , initWithConfig
     , reset
+    , setStartTime
     , timeRemainingMinSec
     , update
     , withLongBreakAfterCount
@@ -18,6 +18,7 @@ import Duration exposing (Duration)
 import Json.Decode as Decode exposing (Decoder, decodeValue, int)
 import Json.Decode.Pipeline exposing (required)
 import Quantity
+import Time
 
 
 type Activity
@@ -41,16 +42,12 @@ type alias Config =
 type alias Session =
     { activity : Activity
     , timeRemaining : Duration
+    , timeStamp : Time.Posix
     }
 
 
 type Model
     = Model Config Int Session
-
-
-init : Model
-init =
-    Model initConfig 0 (work initConfig)
 
 
 initWithConfig : Decode.Value -> Model
@@ -60,12 +57,12 @@ initWithConfig configJson =
             decodeValue decoder configJson
                 |> Result.withDefault initConfig
     in
-    Model config 0 (work config)
+    Model config 0 (work (Time.millisToPosix 0) config)
 
 
 reset : Model -> Model
-reset (Model config count _) =
-    Model config count (work config)
+reset (Model config count currentStage) =
+    Model config count (work currentStage.timeStamp config)
 
 
 initConfig : Config
@@ -102,8 +99,13 @@ withLongBreakAfterCount count (Model config count_ stage) =
     Model { config | longBreakAfterCount = count } count_ stage
 
 
-update : Model -> Model
-update (Model config workDoneCount currentStage) =
+setStartTime : Time.Posix -> Model -> Model
+setStartTime newTime (Model config workDoneCount currentStage) =
+    Model config workDoneCount { currentStage | timeStamp = newTime }
+
+
+update : Time.Posix -> Model -> Model
+update newTime (Model config workDoneCount currentStage) =
     if timedOut currentStage.timeRemaining then
         case currentStage.activity of
             Work ->
@@ -115,16 +117,16 @@ update (Model config workDoneCount currentStage) =
                         Basics.modBy config.longBreakAfterCount (workDoneCount + 1) == 0
                 in
                 if needsLongBreak then
-                    readyFor (longBreak config)
+                    readyFor (longBreak newTime config)
 
                 else
-                    readyFor (shortBreak config)
+                    readyFor (shortBreak newTime config)
 
             Break _ ->
-                Model config workDoneCount (work config)
+                Model config workDoneCount (work newTime config)
 
     else
-        Model config workDoneCount (countDown currentStage)
+        Model config workDoneCount (countDown newTime currentStage)
 
 
 timedOut : Duration -> Basics.Bool
@@ -132,24 +134,28 @@ timedOut time =
     time |> Quantity.equalWithin Quantity.zero (Duration.seconds 0)
 
 
-countDown : Session -> Session
-countDown stage =
-    { stage | timeRemaining = Quantity.minus Duration.second stage.timeRemaining }
+countDown : Time.Posix -> Session -> Session
+countDown newTime stage =
+    let
+        elapsed =
+            Duration.from stage.timeStamp newTime
+    in
+    { stage | timeStamp = newTime, timeRemaining = Quantity.minus elapsed stage.timeRemaining }
 
 
-work : Config -> Session
-work config =
-    Session Work config.workInterval
+work : Time.Posix -> Config -> Session
+work timeStamp config =
+    Session Work config.workInterval timeStamp
 
 
-shortBreak : Config -> Session
-shortBreak config =
-    Session (Break Short) config.shortInterval
+shortBreak : Time.Posix -> Config -> Session
+shortBreak timeStamp config =
+    Session (Break Short) config.shortInterval timeStamp
 
 
-longBreak : Config -> Session
-longBreak config =
-    Session (Break Long) config.longInterval
+longBreak : Time.Posix -> Config -> Session
+longBreak timeStamp config =
+    Session (Break Long) config.longInterval timeStamp
 
 
 timeRemainingMinSec : Model -> ( Int, Int )

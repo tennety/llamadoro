@@ -13,6 +13,7 @@ import Json.Decode as Decode
 import Palette
 import Route exposing (Route(..))
 import Session exposing (Activity(..))
+import Task
 import Time
 import Url exposing (Url)
 import View
@@ -44,6 +45,7 @@ type alias Model =
 type Msg
     = BrowserChangedUrl Url
     | UserClickedLink Browser.UrlRequest
+    | ReceivedCurrentTime Time.Posix
     | ReceivedTick Time.Posix
     | UserClickedPause
     | UserClickedPlay
@@ -200,11 +202,16 @@ update msg model =
                     , Nav.load url
                     )
 
-        ReceivedTick _ ->
-            ( { model | currentSession = Session.update model.currentSession }, Cmd.none )
+        ReceivedCurrentTime timeStamp ->
+            ( { model | currentSession = Session.setStartTime timeStamp model.currentSession }, Cmd.none )
+
+        ReceivedTick timeStamp ->
+            ( { model | currentSession = Session.update timeStamp model.currentSession }, Cmd.none )
 
         UserClickedPlay ->
-            ( { model | mode = Running }, Cmd.none )
+            ( { model | mode = Running }
+            , Task.perform ReceivedCurrentTime Time.now
+            )
 
         UserClickedPause ->
             ( { model | mode = Paused }, Cmd.none )
@@ -224,7 +231,7 @@ init flags url key =
       , currentSession = Session.initWithConfig flags.config
       , mode = Paused
       }
-    , Cmd.none
+    , Task.perform ReceivedCurrentTime Time.now
     )
 
 
