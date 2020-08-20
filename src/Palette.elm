@@ -20,7 +20,7 @@ color =
 
 fontFamily =
     { title = Font.typeface "Asap, monospace"
-    , display = Font.typeface "Bungee Shade"
+    , display = Font.typeface "Dosis"
     }
 
 
