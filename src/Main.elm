@@ -246,4 +246,4 @@ subscriptions model =
             Sub.none
 
         Running ->
-            Time.every 1000 ReceivedTick
+            Time.every 500 ReceivedTick

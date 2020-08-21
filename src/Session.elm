@@ -131,7 +131,7 @@ update newTime (Model config workDoneCount currentStage) =
 
 timedOut : Duration -> Basics.Bool
 timedOut time =
-    time |> Quantity.equalWithin Quantity.zero (Duration.seconds 0)
+    time |> Quantity.equalWithin (Duration.seconds 0.1) Quantity.zero
 
 
 countDown : Time.Posix -> Session -> Session
@@ -140,7 +140,7 @@ countDown newTime stage =
         elapsed =
             Duration.from stage.timeStamp newTime
     in
-    { stage | timeStamp = newTime, timeRemaining = Quantity.minus elapsed stage.timeRemaining }
+    { stage | timeStamp = newTime, timeRemaining = Quantity.max (Quantity.minus elapsed stage.timeRemaining) (Duration.seconds 0) }
 
 
 work : Time.Posix -> Config -> Session
