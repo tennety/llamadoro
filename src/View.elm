@@ -6,7 +6,7 @@ module View exposing
     , timer
     )
 
-import Element exposing (Element, alignTop, centerX, column, el, fill, fillPortion, link, minimum, paragraph, row, text, width)
+import Element exposing (Element, alignTop, centerX, column, el, fill, fillPortion, link, minimum, paddingXY, paragraph, row, shrink, spacingXY, text, width)
 import Element.Font as Font
 import Element.Region as Region
 import Palette
@@ -70,23 +70,24 @@ timer activityColor ( mins, secs ) =
         , Font.medium
         , Font.color activityColor
         , centerX
-        , width (fill |> minimum 253)
+        , width fill
         , Region.description <| String.fromInt mins ++ " minutes remaining."
         ]
         [ el
-            [ width (fillPortion 5)
+            [ width (fillPortion 1)
             , Font.alignRight
             ]
             (mins |> String.fromInt |> String.padLeft 2 '0' |> text)
         , el
-            [ width (fillPortion 1)
+            [ width shrink
+            , paddingXY 5 0
             , Font.size (Palette.scaled 7)
             , Font.center
             , alignTop
             ]
             (text ":")
         , el
-            [ width (fillPortion 5)
+            [ width (fillPortion 1)
             , Font.alignLeft
             ]
             (secs |> String.fromInt |> String.padLeft 2 '0' |> text)

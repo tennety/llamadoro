@@ -86,8 +86,8 @@ view model =
 
 body : Model -> Html Msg
 body model =
-    layout [ width fill, height fill, centerX ] <|
-        column [ centerX ] <|
+    layout [] <|
+        column [ height fill, width fill ] <|
             case model.route of
                 Home ->
                     viewHome model.mode model.currentSession
@@ -116,10 +116,12 @@ viewHome mode session =
     [ column
         [ paddingXY 0 50
         , spacing 50
+        , height fill
+        , width fill
         ]
         [ View.timer timerColor (Session.timeRemainingMinSec session)
         , row
-            [ centerX, Border.solid, Border.widthXY 0 5, Border.color Palette.color.copy, padding (Palette.scaled 2) ]
+            [ centerX, width fill, Border.solid, Border.widthXY 0 5, Border.color Palette.color.copy, padding (Palette.scaled 2) ]
             [ playPauseButton (Palette.scaled 6) mode
             , resetButton (Palette.scaled 6)
             ]
@@ -159,6 +161,7 @@ playPauseButton size mode =
     Input.button
         [ Border.rounded (size // 2)
         , focused [ Border.glow Palette.color.free 1 ]
+        , centerX
         , Region.description desc
         ]
         { onPress = Just msg
@@ -171,6 +174,7 @@ resetButton size =
     Input.button
         [ Border.rounded (size // 2)
         , focused [ Border.glow Palette.color.busy 1 ]
+        , centerX
         , Region.description "stop"
         ]
         { onPress = Just UserClickedReset
