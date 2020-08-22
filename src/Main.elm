@@ -121,10 +121,30 @@ viewHome mode session =
         ]
         [ View.timer timerColor (Session.timeRemainingMinSec session)
         , row
-            [ centerX, width fill, Border.solid, Border.widthXY 0 5, Border.color Palette.color.copy, padding (Palette.scaled 2) ]
+            [ centerX
+            , width fill
+            ]
+            [ session
+                |> Session.workSessionCount
+                |> workLlama
+            ]
+        , row
+            [ centerX
+            , width fill
+            , Border.solid
+            , Border.widthXY 0 5
+            , Border.color Palette.color.copy
+            , padding (Palette.scaled 2)
+            ]
             [ playPauseButton (Palette.scaled 6) mode
             , resetButton (Palette.scaled 6)
             ]
+        , column
+            [ width fill
+            , height fill
+            , centerX
+            ]
+            [ Debug.log "exercise" Element.none ]
         ]
     ]
 
@@ -180,6 +200,33 @@ resetButton size =
         { onPress = Just UserClickedReset
         , label = el [ height (px size), width (px size), Font.color Palette.color.busy ] (html (stop []))
         }
+
+
+workLlama : Int -> Element Msg
+workLlama count =
+    let
+        countText =
+            String.fromInt count
+
+        size =
+            Palette.scaled 3
+    in
+    el
+        [ Border.rounded (size // 2)
+        , Border.solid
+        , Border.width 2
+        , Border.color Palette.color.copy
+        , centerX
+        , height (px size)
+        , width (px size)
+        , paddingXY 0 (size // 8)
+        , Font.color Palette.color.busy
+        , Font.light
+        , Font.family Palette.fontFamily.title
+        , Font.center
+        , Region.description <| countText ++ " work sessions finished!"
+        ]
+        (text countText)
 
 
 

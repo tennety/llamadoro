@@ -19,8 +19,8 @@ color =
 
 
 fontFamily =
-    { title = Font.typeface "Asap, monospace"
-    , display = Font.typeface "Dosis"
+    { title = [ Font.typeface "Asap", Font.typeface "monospace" ]
+    , display = [ Font.typeface "Dosis" ]
     }
 
 

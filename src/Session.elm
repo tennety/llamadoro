@@ -12,6 +12,7 @@ module Session exposing
     , withLongInterval
     , withShortInterval
     , withWorkInterval
+    , workSessionCount
     )
 
 import Duration exposing (Duration)
@@ -77,6 +78,11 @@ initConfig =
 activity : Model -> Activity
 activity (Model _ _ stage) =
     stage.activity
+
+
+workSessionCount : Model -> Basics.Int
+workSessionCount (Model _ count _) =
+    count
 
 
 withWorkInterval : Duration -> Model -> Model

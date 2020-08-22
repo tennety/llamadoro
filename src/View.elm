@@ -65,7 +65,7 @@ notFound =
 timer : Element.Color -> ( Int, Int ) -> Element msg
 timer activityColor ( mins, secs ) =
     row
-        [ Font.family [ Palette.fontFamily.display ]
+        [ Font.family Palette.fontFamily.display
         , Font.size (Palette.scaled 8)
         , Font.medium
         , Font.color activityColor
@@ -98,7 +98,7 @@ heading : Int -> List (Element msg) -> Element msg
 heading level content =
     paragraph
         ([ Font.regular
-         , Font.family [ Palette.fontFamily.title ]
+         , Font.family Palette.fontFamily.title
          , Font.color Palette.color.copy
          , Region.heading level
          ]
