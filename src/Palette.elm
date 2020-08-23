@@ -1,7 +1,7 @@
-module Palette exposing (color, fontFamily, fromElmColor, scaled)
+module Palette exposing (color, fontFamily, fromElmColor, scaled, toElmColor, withOpacity)
 
 import Color
-import Element exposing (fromRgb, rgb255)
+import Element exposing (fromRgb, rgb255, toRgb)
 import Element.Font as Font
 
 
@@ -29,5 +29,20 @@ fromElmColor =
     Color.toRgba >> fromRgb
 
 
+toElmColor : Element.Color -> Color.Color
+toElmColor =
+    toRgb >> Color.fromRgba
+
+
 scaled =
     Element.modular 20 1.25 >> round
+
+
+withOpacity : Float -> Element.Color -> Element.Color
+withOpacity opacity opaqueClr =
+    opaqueClr
+        |> toRgb
+        |> (\clr ->
+                { clr | alpha = opacity }
+                    |> fromRgb
+           )

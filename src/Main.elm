@@ -2,17 +2,20 @@ module Main exposing (main)
 
 import Browser
 import Browser.Navigation as Nav
-import Element exposing (Element, centerX, column, el, fill, focused, height, html, layout, padding, paddingXY, px, row, spacing, text, width)
+import Color
+import Element exposing (Element, centerX, column, el, fill, focused, height, html, layout, paddingXY, px, row, spacing, text, width)
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Element.Region as Region
+import Gen.Graphics as Graphics
 import Heroicons.Solid exposing (pause, play, stop)
 import Html exposing (Html)
 import Json.Decode as Decode
 import Palette
 import Route exposing (Route(..))
 import Session exposing (Activity(..))
+import Svg.Attributes as SA
 import Task
 import Time
 import Url exposing (Url)
@@ -112,29 +115,21 @@ viewHome mode session =
 
                 Break _ ->
                     Palette.color.free
+
+        doneSessions =
+            Session.workSessionCount session
     in
     [ column
         [ paddingXY 0 50
-        , spacing 50
+        , spacing 40
         , height fill
         , width fill
         ]
         [ View.timer timerColor (Session.timeRemainingMinSec session)
+        , workLlama doneSessions
         , row
             [ centerX
             , width fill
-            ]
-            [ session
-                |> Session.workSessionCount
-                |> workLlama
-            ]
-        , row
-            [ centerX
-            , width fill
-            , Border.solid
-            , Border.widthXY 0 5
-            , Border.color Palette.color.copy
-            , padding (Palette.scaled 2)
             ]
             [ playPauseButton (Palette.scaled 6) mode
             , resetButton (Palette.scaled 6)
@@ -207,26 +202,34 @@ workLlama count =
     let
         countText =
             String.fromInt count
-
-        size =
-            Palette.scaled 3
     in
-    el
-        [ Border.rounded (size // 2)
-        , Border.solid
-        , Border.width 2
-        , Border.color Palette.color.copy
-        , centerX
-        , height (px size)
-        , width (px size)
-        , paddingXY 0 (size // 8)
-        , Font.color Palette.color.busy
-        , Font.light
+    row
+        [ centerX
+        , spacing 5
         , Font.family Palette.fontFamily.title
+        , Font.color Palette.color.copy
+        , Font.size (Palette.scaled 2)
         , Font.center
-        , Region.description <| countText ++ " work sessions finished!"
+        , Font.light
         ]
-        (text countText)
+        (if count > 0 then
+            [ el
+                [ centerX
+                , Border.rounded (Palette.scaled 3)
+                ]
+                (html <|
+                    Graphics.workLlama
+                        [ SA.width "40px"
+                        , SA.height "40px"
+                        , SA.fill (Palette.color.busy |> Palette.toElmColor |> Color.toCssString)
+                        ]
+                )
+            , text countText
+            ]
+
+         else
+            []
+        )
 
 
 
