@@ -2693,6 +2693,21 @@ chokidar@^2.1.5:
   optionalDependencies:
     fsevents "^1.2.7"
 
+chokidar@^3.4.0:
+  version "3.4.2"
+  resolved "https://registry.yarnpkg.com/chokidar/-/chokidar-3.4.2.tgz#38dc8e658dec3809741eb3ef7bb0a47fe424232d"
+  integrity sha512-IZHaDeBeI+sZJRX7lGcXsdzgvZqKv6sECqsbErJA4mHWfpRrD8B97kSFN4cQz6nGBGiuFia1MKR4d6c1o8Cv7A==
+  dependencies:
+    anymatch "~3.1.1"
+    braces "~3.0.2"
+    glob-parent "~5.1.0"
+    is-binary-path "~2.1.0"
+    is-glob "~4.0.1"
+    normalize-path "~3.0.0"
+    readdirp "~3.4.0"
+  optionalDependencies:
+    fsevents "~2.1.2"
+
 chownr@^1.1.1:
   version "1.1.4"
   resolved "https://registry.yarnpkg.com/chownr/-/chownr-1.1.4.tgz#6fc9d7b42d32a583596337666e7d08084da2cc6b"
@@ -8160,6 +8175,15 @@ parcel-bundler@^1.12.3:
     v8-compile-cache "^2.0.0"
     ws "^5.1.1"
 
+parcel-plugin-elm-svg@^1.0.6:
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/parcel-plugin-elm-svg/-/parcel-plugin-elm-svg-1.0.6.tgz#39c1eacb9806cccd07f1a806fd54b7e3b09d7fc3"
+  integrity sha512-Xhr4COP68CI0gSnX56xbQzjI1vTuL4zTjU3Z+eJ5WdKsy2Pa3aSA/C4v5XiURyxZIAmfkIwhcrju/Q3MWWCZvw==
+  dependencies:
+    chokidar "^3.4.0"
+    glob "^7.1.6"
+    svg2elm "^1.2.3"
+
 parse-asn1@^5.0.0, parse-asn1@^5.1.5:
   version "5.1.5"
   resolved "https://registry.yarnpkg.com/parse-asn1/-/parse-asn1-5.1.5.tgz#003271343da58dc94cace494faef3d2147ecea0e"
@@ -10241,6 +10265,13 @@ supports-hyperlinks@^1.0.1:
   dependencies:
     has-flag "^2.0.0"
     supports-color "^5.0.0"
+
+svg2elm@^1.2.3:
+  version "1.2.3"
+  resolved "https://registry.yarnpkg.com/svg2elm/-/svg2elm-1.2.3.tgz#3faf315c18021865c2ff4bec0e2496fbfba6df57"
+  integrity sha512-T1r++4+9wH6sygP357h/tbiNDF/ceF6gJK+HV4SK/QPMGKE50Rz5dl3FRDbiQSVlrP+X5FJOdM10N9iYy7LQFA==
+  dependencies:
+    yargs "^15.3.1"
 
 svgo@^1.0.0, svgo@^1.3.2:
   version "1.3.2"
