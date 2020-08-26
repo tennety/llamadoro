@@ -3,7 +3,8 @@ module Main exposing (main)
 import Browser
 import Browser.Navigation as Nav
 import Color
-import Element exposing (Element, centerX, column, el, fill, focused, height, html, layout, paddingXY, px, row, spacing, text, width)
+import Element exposing (Element, alignTop, centerX, column, el, fill, focused, height, html, layout, maximum, minimum, moveDown, moveUp, padding, paddingXY, px, row, spacing, text, width)
+import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
@@ -126,7 +127,6 @@ viewHome mode session =
         , width fill
         ]
         [ View.timer timerColor (Session.timeRemainingMinSec session)
-        , workLlama doneSessions
         , row
             [ centerX
             , width fill
@@ -134,6 +134,14 @@ viewHome mode session =
             [ playPauseButton (Palette.scaled 6) mode
             , resetButton (Palette.scaled 6)
             ]
+        , el
+            [ width fill
+            , Border.solid
+            , Border.widthEach { top = 1, bottom = 0, left = 0, right = 0 }
+            , Border.color Palette.color.copy
+            , moveDown (Basics.toFloat <| Palette.scaled 2)
+            ]
+            (workLlama doneSessions)
         , column
             [ width fill
             , height fill
@@ -206,30 +214,32 @@ workLlama count =
     row
         [ centerX
         , spacing 5
+        , paddingXY 12 5
+        , moveUp (Basics.toFloat <| Palette.scaled 2)
         , Font.family Palette.fontFamily.title
-        , Font.color Palette.color.copy
-        , Font.size (Palette.scaled 2)
+        , Font.color Palette.color.busy
+        , Font.size (Palette.scaled 1)
         , Font.center
         , Font.light
+        , Border.rounded (Palette.scaled 2)
+        , Background.color Palette.color.copy
         ]
-        (if count > 0 then
-            [ el
-                [ centerX
-                , Border.rounded (Palette.scaled 3)
-                ]
-                (html <|
-                    Graphics.workLlama
-                        [ SA.width "40px"
-                        , SA.height "40px"
-                        , SA.fill (Palette.color.busy |> Palette.toElmColor |> Color.toCssString)
-                        ]
-                )
-            , text countText
+        [ el [ centerX ]
+            (html <|
+                Graphics.workLlama
+                    [ SA.width "40px"
+                    , SA.height "40px"
+                    , SA.fill (Color.white |> Color.toCssString)
+                    ]
+            )
+        , el
+            [ centerX
+            , paddingXY 10 5
+            , Border.rounded (Palette.scaled 3)
+            , Background.color (Color.white |> Palette.fromElmColor)
             ]
-
-         else
-            []
-        )
+            (text countText)
+        ]
 
 
 
