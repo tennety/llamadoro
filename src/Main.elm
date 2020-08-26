@@ -3,7 +3,7 @@ module Main exposing (main)
 import Browser
 import Browser.Navigation as Nav
 import Color
-import Element exposing (Element, alignTop, centerX, column, el, fill, focused, height, html, layout, maximum, minimum, moveDown, moveUp, padding, paddingXY, px, row, spacing, text, width)
+import Element exposing (Element, centerX, column, el, fill, focused, height, html, layout, moveDown, moveUp, paddingXY, paragraph, px, row, spacing, text, width)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
@@ -110,12 +110,11 @@ viewHome : Mode -> Session.Model -> List (Element Msg)
 viewHome mode session =
     let
         timerColor =
-            case Session.activity session of
-                Work ->
-                    Palette.color.busy
+            if Session.working session then
+                Palette.color.busy
 
-                Break _ ->
-                    Palette.color.free
+            else
+                Palette.color.free
 
         doneSessions =
             Session.workSessionCount session
@@ -145,9 +144,22 @@ viewHome mode session =
         , column
             [ width fill
             , height fill
-            , centerX
+            , paddingXY 10 0
             ]
-            [ Debug.log "exercise" Element.none ]
+            [ paragraph
+                [ Region.heading 2
+                , Font.center
+                , Font.size (Palette.scaled 3)
+                , Font.family Palette.fontFamily.title
+                , Font.color Palette.color.copy
+                ]
+                (if Session.working session then
+                    [ text "You're llama-dorable!" ]
+
+                 else
+                    [ text "How about some quick fitness?" ]
+                )
+            ]
         ]
     ]
 

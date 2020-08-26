@@ -2,8 +2,8 @@ module Session exposing
     ( Activity(..)
     , IntervalLength(..)
     , Model
-    , activity
     , initWithConfig
+    , onBreak
     , reset
     , setStartTime
     , timeRemainingMinSec
@@ -13,8 +13,10 @@ module Session exposing
     , withShortInterval
     , withWorkInterval
     , workSessionCount
+    , working
     )
 
+import Basics
 import Duration exposing (Duration)
 import Json.Decode as Decode exposing (Decoder, decodeValue, int)
 import Json.Decode.Pipeline exposing (required)
@@ -75,9 +77,19 @@ initConfig =
     }
 
 
-activity : Model -> Activity
-activity (Model _ _ stage) =
-    stage.activity
+onBreak : Model -> Bool
+onBreak =
+    Basics.not << working
+
+
+working : Model -> Bool
+working (Model _ _ stage) =
+    case stage.activity of
+        Work ->
+            Basics.True
+
+        Break _ ->
+            Basics.False
 
 
 workSessionCount : Model -> Basics.Int
