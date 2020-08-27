@@ -7,6 +7,7 @@ import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Element.Region as Region
+import Fitness
 import Heroicons.Solid exposing (pause, play, stop)
 import Html exposing (Html)
 import Json.Decode as Decode
@@ -37,8 +38,9 @@ type Mode
 type alias Model =
     { key : Nav.Key
     , route : Route.Route
-    , currentSession : Session.Model
     , mode : Mode
+    , currentSession : Session.Model
+    , fitnessLevel : Fitness.Level
     }
 
 
@@ -263,8 +265,9 @@ init flags url key =
     in
     ( { key = key
       , route = route
-      , currentSession = Session.initWithConfig flags.config
       , mode = Paused
+      , currentSession = Session.initWithConfig flags.config
+      , fitnessLevel = Fitness.decodeLevel flags.config
       }
     , Task.perform ReceivedCurrentTime Time.now
     )

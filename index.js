@@ -12,6 +12,7 @@ readTextFile(`../static/config.json`).then(config => {
   //   "longBreakAfterCount": 5
   // })
   const flags = { config: JSON.parse(config), exercises: {}};
+  //   "fitnessLevel": "intermediate"
 
   const app = Elm.Main.init({ flags });
 })
