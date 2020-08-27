@@ -2,21 +2,17 @@ module Main exposing (main)
 
 import Browser
 import Browser.Navigation as Nav
-import Color
-import Element exposing (Element, centerX, column, el, fill, focused, height, html, layout, moveDown, moveUp, paddingXY, paragraph, px, row, spacing, text, width)
-import Element.Background as Background
+import Element exposing (Element, centerX, column, el, fill, focused, height, html, layout, moveDown, paddingXY, paragraph, px, row, spacing, text, width)
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Element.Region as Region
-import Gen.Graphics as Graphics
 import Heroicons.Solid exposing (pause, play, stop)
 import Html exposing (Html)
 import Json.Decode as Decode
 import Palette
 import Route exposing (Route(..))
 import Session exposing (Activity(..))
-import Svg.Attributes as SA
 import Task
 import Time
 import Url exposing (Url)
@@ -140,7 +136,7 @@ viewHome mode session =
             , Border.color Palette.color.copy
             , moveDown (Basics.toFloat <| Palette.scaled 2)
             ]
-            (workLlama doneSessions)
+            (View.workCountLlama doneSessions)
         , column
             [ width fill
             , height fill
@@ -215,43 +211,6 @@ resetButton size =
         { onPress = Just UserClickedReset
         , label = el [ height (px size), width (px size), Font.color Palette.color.busy ] (html (stop []))
         }
-
-
-workLlama : Int -> Element Msg
-workLlama count =
-    let
-        countText =
-            String.fromInt count
-    in
-    row
-        [ centerX
-        , spacing 5
-        , paddingXY 12 5
-        , moveUp (Basics.toFloat <| Palette.scaled 2)
-        , Font.family Palette.fontFamily.title
-        , Font.color Palette.color.busy
-        , Font.size (Palette.scaled 1)
-        , Font.center
-        , Font.light
-        , Border.rounded (Palette.scaled 2)
-        , Background.color Palette.color.copy
-        ]
-        [ el [ centerX ]
-            (html <|
-                Graphics.workLlama
-                    [ SA.width "40px"
-                    , SA.height "40px"
-                    , SA.fill (Color.white |> Color.toCssString)
-                    ]
-            )
-        , el
-            [ centerX
-            , paddingXY 10 5
-            , Border.rounded (Palette.scaled 3)
-            , Background.color (Color.white |> Palette.fromElmColor)
-            ]
-            (text countText)
-        ]
 
 
 

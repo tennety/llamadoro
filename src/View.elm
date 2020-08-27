@@ -4,12 +4,18 @@ module View exposing
     , heading
     , notFound
     , timer
+    , workCountLlama
     )
 
-import Element exposing (Element, alignTop, centerX, column, el, fill, fillPortion, link, minimum, paddingXY, paragraph, row, shrink, spacingXY, text, width)
+import Color
+import Element exposing (Element, alignTop, centerX, column, el, fill, fillPortion, height, html, link, moveUp, paddingXY, paragraph, row, shrink, spacing, text, width)
+import Element.Background as Background
+import Element.Border as Border
 import Element.Font as Font
 import Element.Region as Region
+import Gen.Graphics as Graphics
 import Palette
+import Svg.Attributes as SA
 
 
 
@@ -117,3 +123,40 @@ heading level content =
                )
         )
         content
+
+
+workCountLlama : Int -> Element msg
+workCountLlama count =
+    let
+        countText =
+            String.fromInt count
+    in
+    row
+        [ centerX
+        , spacing 5
+        , paddingXY 12 5
+        , moveUp (Basics.toFloat <| Palette.scaled 2)
+        , Font.family Palette.fontFamily.title
+        , Font.color Palette.color.busy
+        , Font.size (Palette.scaled 1)
+        , Font.center
+        , Font.light
+        , Border.rounded (Palette.scaled 2)
+        , Background.color Palette.color.copy
+        ]
+        [ el [ centerX ]
+            (html <|
+                Graphics.workLlama
+                    [ SA.width "40px"
+                    , SA.height "40px"
+                    , SA.fill (Color.white |> Color.toCssString)
+                    ]
+            )
+        , el
+            [ centerX
+            , paddingXY 10 5
+            , Border.rounded (Palette.scaled 3)
+            , Background.color (Color.white |> Palette.fromElmColor)
+            ]
+            (text countText)
+        ]
