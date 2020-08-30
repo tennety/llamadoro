@@ -1,7 +1,7 @@
 {
   "build": {
     "distDir": "../dist",
-    "devPath": "http://localhost:8888",
+    "devPath": "http://localhost:1234",
     "beforeDevCommand": "",
     "beforeBuildCommand": ""
   },
@@ -43,9 +43,9 @@
     },
     "window": {
       "title": "Llamadoro",
-      "width": 800,
-      "height": 600,
-      "resizable": true,
+      "width": 400,
+      "height": 800,
+      "resizable": false,
       "fullscreen": false
     },
     "security": {
