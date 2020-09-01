@@ -1,5 +1,6 @@
-module Fitness exposing (Exercise, ExercisesByLevel, Level(..), buildExercises, decodeExerciseInfo, decodeLevel, levelFieldDecoder)
+module Fitness exposing (Exercise, ExercisesByLevel, Level(..), buildExercises, decodeExerciseInfo, decodeLevel, getExercisesForLevel, levelFieldDecoder)
 
+import Array exposing (Array)
 import Json.Decode as Decode exposing (Decoder, decodeValue, int, list, string)
 import Json.Decode.Pipeline exposing (optional, required)
 
@@ -11,9 +12,9 @@ type Level
 
 
 type alias ExercisesByLevel =
-    { beginner : List Exercise
-    , intermediate : List Exercise
-    , advanced : List Exercise
+    { beginner : Array Exercise
+    , intermediate : Array Exercise
+    , advanced : Array Exercise
     }
 
 
@@ -59,9 +60,22 @@ buildExercises : List ExerciseInfo -> ExercisesByLevel
 buildExercises exercises =
     let
         byLevel =
-            ExercisesByLevel [] [] []
+            ExercisesByLevel Array.empty Array.empty Array.empty
     in
     List.foldl builder byLevel exercises
+
+
+getExercisesForLevel : Level -> ExercisesByLevel -> Array Exercise
+getExercisesForLevel level byLevel =
+    case level of
+        Beginner ->
+            byLevel.beginner
+
+        Intermediate ->
+            byLevel.intermediate
+
+        Advanced ->
+            byLevel.advanced
 
 
 builder : ExerciseInfo -> ExercisesByLevel -> ExercisesByLevel
@@ -70,13 +84,13 @@ builder { name, variations } byLevel =
         func var rec =
             case var.level of
                 Beginner ->
-                    { rec | beginner = rec.beginner ++ [ buildFromVariation name var ] }
+                    { rec | beginner = Array.push (buildFromVariation name var) rec.beginner }
 
                 Intermediate ->
-                    { rec | intermediate = rec.intermediate ++ [ buildFromVariation name var ] }
+                    { rec | intermediate = Array.push (buildFromVariation name var) rec.intermediate }
 
                 Advanced ->
-                    { rec | advanced = rec.advanced ++ [ buildFromVariation name var ] }
+                    { rec | advanced = Array.push (buildFromVariation name var) rec.advanced }
     in
     List.foldl func byLevel variations
 

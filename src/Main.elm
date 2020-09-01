@@ -12,6 +12,8 @@ import Heroicons.Solid exposing (pause, play, stop)
 import Html exposing (Html)
 import Json.Decode as Decode
 import Palette
+import Random
+import Random.Array
 import Route exposing (Route(..))
 import Session exposing (Activity(..))
 import Task
@@ -51,6 +53,7 @@ type Msg
     | UserClickedLink Browser.UrlRequest
     | ReceivedCurrentTime Time.Posix
     | ReceivedTick Time.Posix
+    | ReceivedSampleExercise (Maybe Fitness.Exercise)
     | UserClickedPause
     | UserClickedPlay
     | UserClickedReset
@@ -245,7 +248,25 @@ update msg model =
             ( { model | currentSession = Session.setStartTime timeStamp model.currentSession }, Cmd.none )
 
         ReceivedTick timeStamp ->
-            ( { model | currentSession = Session.update timeStamp model.currentSession }, Cmd.none )
+            let
+                newSession =
+                    Session.update timeStamp model.currentSession
+
+                cmd =
+                    if Session.onBreak newSession then
+                        let
+                            exercises =
+                                Fitness.getExercisesForLevel model.fitnessLevel model.exercises
+                        in
+                        Random.generate ReceivedSampleExercise (Random.Array.sample exercises)
+
+                    else
+                        Cmd.none
+            in
+            ( { model | currentSession = newSession }, cmd )
+
+        ReceivedSampleExercise maybeExercise ->
+            ( { model | currentExercise = maybeExercise }, Cmd.none )
 
         UserClickedPlay ->
             ( { model | mode = Running }
