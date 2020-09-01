@@ -1,0 +1,31 @@
+---
+- name: Push-ups
+  variations:
+  - level: beginner
+    reps: 15
+    directions:
+    - against the wall
+  - level: intermediate
+    reps: 15
+    directions:
+    - on the floor
+  - level: advanced
+    reps: 25
+    directions:
+    - on the floor
+- name: Forward Lunges
+  variations:
+  - level: beginner
+    reps: 10
+  - level: intermediate
+    reps: 15
+  - level: advanced
+    reps: 25
+- name: Bodyweight Squats
+  variations:
+  - level: beginner
+    reps: 10
+  - level: intermediate
+    reps: 15
+  - level: advanced
+    reps: 20

@@ -1,6 +1,6 @@
-module Fitness exposing (Exercise, Level(..), decodeLevel, decoder, levelFieldDecoder)
+module Fitness exposing (Exercise, ExercisesByLevel, Level(..), buildExercises, decodeExerciseInfo, decodeLevel, levelFieldDecoder)
 
-import Json.Decode as Decode exposing (Decoder, decodeValue, int, string)
+import Json.Decode as Decode exposing (Decoder, decodeValue, int, list, string)
 import Json.Decode.Pipeline exposing (optional, required)
 
 
@@ -10,11 +10,34 @@ type Level
     | Advanced
 
 
+type alias ExercisesByLevel =
+    { beginner : List Exercise
+    , intermediate : List Exercise
+    , advanced : List Exercise
+    }
+
+
 type alias Exercise =
     { name : String
     , reps : Int
+    , directions : List String
+    }
+
+
+
+-- Temporary types --
+
+
+type alias ExerciseInfo =
+    { name : String
+    , variations : List Variation
+    }
+
+
+type alias Variation =
+    { reps : Int
     , level : Level
-    , directions : String
+    , directions : List String
     }
 
 
@@ -25,19 +48,63 @@ decodeLevel config =
         |> Result.withDefault Beginner
 
 
-decoder : Decoder Exercise
-decoder =
-    Decode.succeed Exercise
-        |> required "name" string
-        |> required "reps" int
-        |> optional "level" levelFieldDecoder Beginner
-        |> optional "directions" string ""
+decodeExerciseInfo : Decode.Value -> List ExerciseInfo
+decodeExerciseInfo exerciseJson =
+    exerciseJson
+        |> decodeValue (list exerciseInfoDecoder)
+        |> Result.withDefault []
+
+
+buildExercises : List ExerciseInfo -> ExercisesByLevel
+buildExercises exercises =
+    let
+        byLevel =
+            ExercisesByLevel [] [] []
+    in
+    List.foldl builder byLevel exercises
+
+
+builder : ExerciseInfo -> ExercisesByLevel -> ExercisesByLevel
+builder { name, variations } byLevel =
+    let
+        func var rec =
+            case var.level of
+                Beginner ->
+                    { rec | beginner = rec.beginner ++ [ buildFromVariation name var ] }
+
+                Intermediate ->
+                    { rec | intermediate = rec.intermediate ++ [ buildFromVariation name var ] }
+
+                Advanced ->
+                    { rec | advanced = rec.advanced ++ [ buildFromVariation name var ] }
+    in
+    List.foldl func byLevel variations
+
+
+buildFromVariation : String -> Variation -> Exercise
+buildFromVariation name variation =
+    Exercise name variation.reps variation.directions
 
 
 levelFieldDecoder : Decoder Level
 levelFieldDecoder =
     string
         |> Decode.andThen fitnessLevelDecoder
+
+
+variationDecoder : Decoder Variation
+variationDecoder =
+    Decode.succeed Variation
+        |> required "reps" int
+        |> required "level" levelFieldDecoder
+        |> optional "directions" (list string) []
+
+
+exerciseInfoDecoder : Decoder ExerciseInfo
+exerciseInfoDecoder =
+    Decode.succeed ExerciseInfo
+        |> required "name" string
+        |> required "variations" (list variationDecoder)
 
 
 fitnessLevelDecoder : String -> Decoder Level

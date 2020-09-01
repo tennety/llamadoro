@@ -41,6 +41,8 @@ type alias Model =
     , mode : Mode
     , currentSession : Session.Model
     , fitnessLevel : Fitness.Level
+    , exercises : Fitness.ExercisesByLevel
+    , currentExercise : Maybe Fitness.Exercise
     }
 
 
@@ -268,6 +270,8 @@ init flags url key =
       , mode = Paused
       , currentSession = Session.initWithConfig flags.config
       , fitnessLevel = Fitness.decodeLevel flags.config
+      , exercises = flags.exercises |> Fitness.decodeExerciseInfo |> Fitness.buildExercises
+      , currentExercise = Nothing
       }
     , Task.perform ReceivedCurrentTime Time.now
     )
