@@ -2,12 +2,12 @@ module Main exposing (main)
 
 import Browser
 import Browser.Navigation as Nav
-import Element exposing (Element, centerX, column, el, fill, focused, height, html, layout, moveDown, paddingXY, paragraph, px, row, spacing, text, width)
+import Element exposing (Element, centerX, column, el, fill, focused, height, html, layout, moveDown, padding, paddingXY, paragraph, px, row, spaceEvenly, spacing, spacingXY, text, textColumn, width)
 import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Element.Region as Region
-import Fitness
+import Fitness exposing (ExercisesByLevel)
 import Heroicons.Solid exposing (pause, play, stop)
 import Html exposing (Html)
 import Json.Decode as Decode
@@ -44,7 +44,7 @@ type alias Model =
     , currentSession : Session.Model
     , fitnessLevel : Fitness.Level
     , exercises : Fitness.ExercisesByLevel
-    , currentExercise : Maybe Fitness.Exercise
+    , nextExercise : Maybe Fitness.Exercise
     }
 
 
@@ -97,7 +97,7 @@ body model =
         column [ height fill, width fill ] <|
             case model.route of
                 Home ->
-                    viewHome model.mode model.currentSession
+                    viewHome model.mode model.nextExercise model.currentSession
 
                 Settings ->
                     viewSettings model
@@ -109,15 +109,67 @@ body model =
                     View.notFound
 
 
-viewHome : Mode -> Session.Model -> List (Element Msg)
-viewHome mode session =
+viewDirection direction =
+    paragraph
+        [ Font.color Palette.color.copy
+        , Font.size (Palette.scaled 2)
+        ]
+        [ text direction ]
+
+
+viewExercise : Maybe Fitness.Exercise -> Element Msg
+viewExercise maybeExercise =
     let
-        timerColor =
+        exercise =
+            maybeExercise |> Maybe.withDefault Fitness.defaultExercise
+    in
+    textColumn
+        [ width fill
+        , height fill
+        , padding (Palette.scaled 2)
+        , Font.family Palette.fontFamily.title
+        ]
+        [ paragraph
+            [ Region.heading 3
+            , Font.size (Palette.scaled 2)
+            , Font.family Palette.fontFamily.title
+            , Font.color Palette.color.blue
+            ]
+            [ text exercise.name
+            ]
+        , paragraph
+            [ Font.family Palette.fontFamily.title
+            , Font.color (Palette.color.copy |> Palette.withOpacity 0.7)
+            ]
+            [ text <| String.fromInt exercise.reps ++ " repetitions"
+            ]
+        , column
+            [ Font.color Palette.color.copy
+            , paddingXY 0 (Palette.scaled 2)
+            , spacing (Palette.scaled 2)
+            ]
+            (List.map
+                viewDirection
+                exercise.directions
+            )
+        ]
+
+
+viewHome : Mode -> Maybe Fitness.Exercise -> Session.Model -> List (Element Msg)
+viewHome mode maybeExercise session =
+    let
+        ( timerColor, caption, content ) =
             if Session.working session then
-                Palette.color.busy
+                ( Palette.color.busy
+                , "You're llama-dorable!"
+                , Element.none
+                )
 
             else
-                Palette.color.free
+                ( Palette.color.free
+                , "How about some quick fitness?"
+                , viewExercise maybeExercise
+                )
 
         doneSessions =
             Session.workSessionCount session
@@ -156,12 +208,8 @@ viewHome mode session =
                 , Font.family Palette.fontFamily.title
                 , Font.color Palette.color.copy
                 ]
-                (if Session.working session then
-                    [ text "You're llama-dorable!" ]
-
-                 else
-                    [ text "How about some quick fitness?" ]
-                )
+                [ text caption ]
+            , content
             ]
         ]
     ]
@@ -220,6 +268,15 @@ resetButton size =
         }
 
 
+fetchNextExercise : Fitness.Level -> Fitness.ExercisesByLevel -> Cmd Msg
+fetchNextExercise level exercises =
+    let
+        levelExercises =
+            Fitness.getExercisesForLevel level exercises
+    in
+    Random.generate ReceivedSampleExercise (Random.Array.sample levelExercises)
+
+
 
 -- UPDATE
 
@@ -254,11 +311,7 @@ update msg model =
 
                 cmd =
                     if Session.onBreak newSession then
-                        let
-                            exercises =
-                                Fitness.getExercisesForLevel model.fitnessLevel model.exercises
-                        in
-                        Random.generate ReceivedSampleExercise (Random.Array.sample exercises)
+                        fetchNextExercise model.fitnessLevel model.exercises
 
                     else
                         Cmd.none
@@ -266,7 +319,7 @@ update msg model =
             ( { model | currentSession = newSession }, cmd )
 
         ReceivedSampleExercise maybeExercise ->
-            ( { model | currentExercise = maybeExercise }, Cmd.none )
+            ( { model | nextExercise = maybeExercise }, Cmd.none )
 
         UserClickedPlay ->
             ( { model | mode = Running }
@@ -285,16 +338,19 @@ init flags url key =
     let
         route =
             Route.fromUrl url
+
+        model =
+            { key = key
+            , route = route
+            , mode = Paused
+            , currentSession = Session.initWithConfig flags.config
+            , fitnessLevel = Fitness.decodeLevel flags.config
+            , exercises = flags.exercises |> Fitness.decodeExerciseInfo |> Fitness.buildExercises
+            , nextExercise = Nothing
+            }
     in
-    ( { key = key
-      , route = route
-      , mode = Paused
-      , currentSession = Session.initWithConfig flags.config
-      , fitnessLevel = Fitness.decodeLevel flags.config
-      , exercises = flags.exercises |> Fitness.decodeExerciseInfo |> Fitness.buildExercises
-      , currentExercise = Nothing
-      }
-    , Task.perform ReceivedCurrentTime Time.now
+    ( model
+    , Cmd.none
     )
 
 

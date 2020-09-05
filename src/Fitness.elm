@@ -1,4 +1,4 @@
-module Fitness exposing (Exercise, ExercisesByLevel, Level(..), buildExercises, decodeExerciseInfo, decodeLevel, getExercisesForLevel, levelFieldDecoder)
+module Fitness exposing (Exercise, ExercisesByLevel, Level(..), buildExercises, decodeExerciseInfo, decodeLevel, defaultExercise, getExercisesForLevel, levelFieldDecoder)
 
 import Array exposing (Array)
 import Json.Decode as Decode exposing (Decoder, decodeValue, int, list, string)
@@ -39,6 +39,17 @@ type alias Variation =
     { reps : Int
     , level : Level
     , directions : List String
+    }
+
+
+defaultExercise : Exercise
+defaultExercise =
+    { name = "Movement"
+    , reps = 4
+    , directions =
+        [ "Stand up and stretch."
+        , "Walk around the office or up and down the stairs."
+        ]
     }
 
 
