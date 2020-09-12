@@ -1,7 +1,5 @@
 module Session exposing
-    ( Activity(..)
-    , IntervalLength(..)
-    , Model
+    ( Model
     , initWithConfig
     , onBreak
     , reset
@@ -42,9 +40,12 @@ type alias Config =
     }
 
 
-type alias Session =
-    { activity : Activity
-    , timeRemaining : Duration
+type Session
+    = Session Activity Timer
+
+
+type alias Timer =
+    { timeRemaining : Duration
     , timeStamp : Time.Posix
     }
 
@@ -64,8 +65,8 @@ initWithConfig configJson =
 
 
 reset : Model -> Model
-reset (Model config count currentStage) =
-    Model config count (work currentStage.timeStamp config)
+reset (Model config count (Session activity timer)) =
+    Model config count (work timer.timeStamp config)
 
 
 initConfig : Config
@@ -83,8 +84,8 @@ onBreak =
 
 
 working : Model -> Bool
-working (Model _ _ stage) =
-    case stage.activity of
+working (Model _ _ (Session activity timer)) =
+    case activity of
         Work ->
             Basics.True
 
@@ -118,14 +119,14 @@ withLongBreakAfterCount count (Model config count_ stage) =
 
 
 setStartTime : Time.Posix -> Model -> Model
-setStartTime newTime (Model config workDoneCount currentStage) =
-    Model config workDoneCount { currentStage | timeStamp = newTime }
+setStartTime newTime (Model config workDoneCount (Session activity timer)) =
+    Model config workDoneCount (Session activity { timer | timeStamp = newTime })
 
 
 update : Time.Posix -> Model -> Model
-update newTime (Model config workDoneCount currentStage) =
-    if timedOut currentStage.timeRemaining then
-        case currentStage.activity of
+update newTime (Model config workDoneCount (Session activity timer)) =
+    if timedOut timer.timeRemaining then
+        case activity of
             Work ->
                 let
                     readyFor =
@@ -144,7 +145,7 @@ update newTime (Model config workDoneCount currentStage) =
                 Model config workDoneCount (work newTime config)
 
     else
-        Model config workDoneCount (countDown newTime currentStage)
+        Model config workDoneCount (Session activity (countDown newTime timer))
 
 
 timedOut : Duration -> Basics.Bool
@@ -152,35 +153,35 @@ timedOut time =
     time |> Quantity.equalWithin (Duration.seconds 0.1) Quantity.zero
 
 
-countDown : Time.Posix -> Session -> Session
-countDown newTime stage =
+countDown : Time.Posix -> Timer -> Timer
+countDown newTime timer =
     let
         elapsed =
-            Duration.from stage.timeStamp newTime
+            Duration.from timer.timeStamp newTime
     in
-    { stage | timeStamp = newTime, timeRemaining = Quantity.max (Quantity.minus elapsed stage.timeRemaining) (Duration.seconds 0) }
+    { timer | timeStamp = newTime, timeRemaining = Quantity.max (Quantity.minus elapsed timer.timeRemaining) (Duration.seconds 0) }
 
 
 work : Time.Posix -> Config -> Session
 work timeStamp config =
-    Session Work config.workInterval timeStamp
+    Session Work (Timer config.workInterval timeStamp)
 
 
 shortBreak : Time.Posix -> Config -> Session
 shortBreak timeStamp config =
-    Session (Break Short) config.shortInterval timeStamp
+    Session (Break Short) (Timer config.shortInterval timeStamp)
 
 
 longBreak : Time.Posix -> Config -> Session
 longBreak timeStamp config =
-    Session (Break Long) config.longInterval timeStamp
+    Session (Break Long) (Timer config.longInterval timeStamp)
 
 
 timeRemainingMinSec : Model -> ( Int, Int )
-timeRemainingMinSec (Model _ _ stage) =
+timeRemainingMinSec (Model _ _ (Session _ timer)) =
     let
         seconds =
-            stage.timeRemaining
+            timer.timeRemaining
     in
     ( seconds |> Duration.inMinutes
     , seconds |> Quantity.fractionalModBy Duration.minute |> Duration.inSeconds

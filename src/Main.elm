@@ -7,7 +7,7 @@ import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Element.Region as Region
-import Fitness exposing (ExercisesByLevel)
+import Fitness
 import Heroicons.Solid exposing (pause, play, stop)
 import Html exposing (Html)
 import Json.Decode as Decode
@@ -15,7 +15,7 @@ import Palette
 import Random
 import Random.Array
 import Route exposing (Route(..))
-import Session exposing (Activity(..))
+import Session
 import Task
 import Time
 import Url exposing (Url)
