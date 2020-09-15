@@ -1,7 +1,0 @@
-{
-  "workInterval": 1500,
-  "shortInterval": 300,
-  "longInterval": 600,
-  "longBreakAfterCount": 4,
-  "fitnessLevel": "beginner"
-}

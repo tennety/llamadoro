@@ -4,8 +4,8 @@ import { Elm } from "./src/Main.elm";
 import "./scss/style.scss";
 
 Promise.all([
-  readTextFile(`../static/config.json`),
-  readTextFile(`../static/exercises.json`)
+  readTextFile(`static/config.json`, { dir: Dir.Resource }),
+  readTextFile(`static/exercises.json`, { dir: Dir.Resource })
 ]).then(([config, exercises]) => {
   // For testing without Tauri
   // const config = JSON.stringify({

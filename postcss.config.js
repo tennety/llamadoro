@@ -8,11 +8,6 @@ const development = {
 const production = {
   plugins: [
     purgecss({
-      extractors: [
-        {
-          extensions: ["elm", "html", "js"],
-        }
-      ],
       content: ["./src/**/*.elm", "index.js"],
       whitelist: ["html", "body"]
     }),
