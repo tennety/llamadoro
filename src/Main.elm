@@ -16,6 +16,7 @@ import Random
 import Random.Array
 import Route exposing (Route(..))
 import Session
+import Session.Actions as SessionActions exposing (Action(..))
 import Task
 import Time
 import Url exposing (Url)
@@ -306,15 +307,20 @@ update msg model =
 
         ReceivedTick timeStamp ->
             let
-                newSession =
+                ( newSession, action ) =
                     Session.update timeStamp model.currentSession
 
                 cmd =
-                    if Session.onBreak newSession then
-                        fetchNextExercise model.fitnessLevel model.exercises
+                    case action of
+                        SessionActions.CountedDown ->
+                            Cmd.none
 
-                    else
-                        Cmd.none
+                        SessionActions.SwitchedActivity ->
+                            if Session.onBreak newSession then
+                                fetchNextExercise model.fitnessLevel model.exercises
+
+                            else
+                                Cmd.none
             in
             ( { model | currentSession = newSession }, cmd )
 

@@ -19,17 +19,8 @@ import Duration exposing (Duration)
 import Json.Decode as Decode exposing (Decoder, decodeValue, int)
 import Json.Decode.Pipeline exposing (required)
 import Quantity
+import Session.Actions exposing (Action(..), Activity(..), IntervalLength(..))
 import Time
-
-
-type Activity
-    = Work
-    | Break IntervalLength
-
-
-type IntervalLength
-    = Short
-    | Long
 
 
 type alias Config =
@@ -65,7 +56,7 @@ initWithConfig configJson =
 
 
 reset : Model -> Model
-reset (Model config count (Session activity timer)) =
+reset (Model config count (Session _ timer)) =
     Model config count (work timer.timeStamp config)
 
 
@@ -84,7 +75,7 @@ onBreak =
 
 
 working : Model -> Bool
-working (Model _ _ (Session activity timer)) =
+working (Model _ _ (Session activity _)) =
     case activity of
         Work ->
             Basics.True
@@ -123,7 +114,7 @@ setStartTime newTime (Model config workDoneCount (Session activity timer)) =
     Model config workDoneCount (Session activity { timer | timeStamp = newTime })
 
 
-update : Time.Posix -> Model -> Model
+update : Time.Posix -> Model -> ( Model, Action )
 update newTime (Model config workDoneCount (Session activity timer)) =
     if timedOut timer.timeRemaining then
         case activity of
@@ -136,16 +127,16 @@ update newTime (Model config workDoneCount (Session activity timer)) =
                         Basics.modBy config.longBreakAfterCount (workDoneCount + 1) == 0
                 in
                 if needsLongBreak then
-                    readyFor (longBreak newTime config)
+                    ( readyFor (longBreak newTime config), SwitchedActivity )
 
                 else
-                    readyFor (shortBreak newTime config)
+                    ( readyFor (shortBreak newTime config), SwitchedActivity )
 
             Break _ ->
-                Model config workDoneCount (work newTime config)
+                ( Model config workDoneCount (work newTime config), SwitchedActivity )
 
     else
-        Model config workDoneCount (Session activity (countDown newTime timer))
+        ( Model config workDoneCount (Session activity (countDown newTime timer)), CountedDown )
 
 
 timedOut : Duration -> Basics.Bool
