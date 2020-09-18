@@ -2,16 +2,9 @@
 
 Improve your fitness while you work!
 
-```bash
-yarn dev
-yarn test:watch
-yarn cypress:open
-```
-
-Learn more on [Elm Batteries Documentation ›](https://github.com/cedricss/elm-batteries#table-of-contents)
-
 ## Author
 
 - Chandu Tennety
 
+> App built with the amazing [Tauri](https://tauri.studio) app framework.
 > Project generated from [Elm Batteries](https://github.com/cedricss/elm-batteries), a template created by [Cédric Soulas](https://twitter.com/CedricSoulas).
