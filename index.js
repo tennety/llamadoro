@@ -3,9 +3,11 @@ import { Dir, readTextFile } from "tauri/api/fs";
 import { Elm } from "./src/Main.elm";
 import "./scss/style.scss";
 
+const baseDirOpt = process.env.NODE_ENV === "production" ? { dir: Dir.Resource } : {}
+
 Promise.all([
-  readTextFile(`static/config.json`, { dir: Dir.Resource }),
-  readTextFile(`static/exercises.json`, { dir: Dir.Resource })
+  readTextFile(`static/config.json`, baseDirOpt),
+  readTextFile(`static/exercises.json`, baseDirOpt)
 ]).then(([config, exercises]) => {
   // For testing without Tauri
   // const config = JSON.stringify({
