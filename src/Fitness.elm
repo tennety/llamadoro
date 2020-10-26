@@ -1,4 +1,4 @@
-module Fitness exposing (Exercise, ExercisesByLevel, Level(..), buildExercises, decodeExerciseInfo, decodeLevel, defaultExercise, getExercisesForLevel, levelFieldDecoder, viewExercise)
+module Fitness exposing (Exercise, ExercisesByLevel, Level, buildExercises, decodeExerciseInfo, decodeLevel, defaultExercise, getExercisesForLevel, levelFieldDecoder, viewExercise)
 
 import Array exposing (Array)
 import Element exposing (Element, column, fill, height, padding, paddingXY, paragraph, spacing, text, textColumn, width)
@@ -15,11 +15,12 @@ type Level
     | Advanced
 
 
-type alias ExercisesByLevel =
-    { beginner : Array Exercise
-    , intermediate : Array Exercise
-    , advanced : Array Exercise
-    }
+type ExercisesByLevel
+    = ExercisesByLevel
+        { beginner : Array Exercise
+        , intermediate : Array Exercise
+        , advanced : Array Exercise
+        }
 
 
 type Exercise
@@ -77,13 +78,13 @@ buildExercises : List ExerciseInfo -> ExercisesByLevel
 buildExercises exercises =
     let
         byLevel =
-            ExercisesByLevel Array.empty Array.empty Array.empty
+            ExercisesByLevel { beginner = Array.empty, intermediate = Array.empty, advanced = Array.empty }
     in
     List.foldl builder byLevel exercises
 
 
 getExercisesForLevel : Level -> ExercisesByLevel -> Array Exercise
-getExercisesForLevel level byLevel =
+getExercisesForLevel level (ExercisesByLevel byLevel) =
     case level of
         Beginner ->
             byLevel.beginner
@@ -96,7 +97,7 @@ getExercisesForLevel level byLevel =
 
 
 builder : ExerciseInfo -> ExercisesByLevel -> ExercisesByLevel
-builder { name, variations } byLevel =
+builder { name, variations } (ExercisesByLevel byLevel) =
     let
         func var rec =
             case var.level of
@@ -109,7 +110,7 @@ builder { name, variations } byLevel =
                 Advanced ->
                     { rec | advanced = Array.push (buildFromVariation name var) rec.advanced }
     in
-    List.foldl func byLevel variations
+    ExercisesByLevel (List.foldl func byLevel variations)
 
 
 buildFromVariation : String -> Variation -> Exercise
