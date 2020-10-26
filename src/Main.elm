@@ -7,7 +7,7 @@ import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Element.Region as Region
-import Fitness
+import Fitness exposing (viewExercise)
 import Heroicons.Solid exposing (pause, play, stop)
 import Html exposing (Html)
 import Json.Decode as Decode
@@ -45,7 +45,7 @@ type alias Model =
     , currentSession : Session.Model
     , fitnessLevel : Fitness.Level
     , exercises : Fitness.ExercisesByLevel
-    , nextExercise : Maybe Fitness.Exercise
+    , nextExercise : Fitness.Exercise
     }
 
 
@@ -110,54 +110,8 @@ body model =
                     View.notFound
 
 
-viewDirection direction =
-    paragraph
-        [ Font.color Palette.color.copy
-        , Font.size (Palette.scaled 2)
-        ]
-        [ text direction ]
-
-
-viewExercise : Maybe Fitness.Exercise -> Element Msg
-viewExercise maybeExercise =
-    let
-        exercise =
-            maybeExercise |> Maybe.withDefault Fitness.defaultExercise
-    in
-    textColumn
-        [ width fill
-        , height fill
-        , padding (Palette.scaled 2)
-        , Font.family Palette.fontFamily.title
-        ]
-        [ paragraph
-            [ Region.heading 3
-            , Font.size (Palette.scaled 2)
-            , Font.family Palette.fontFamily.title
-            , Font.color Palette.color.blue
-            ]
-            [ text exercise.name
-            ]
-        , paragraph
-            [ Font.family Palette.fontFamily.title
-            , Font.color (Palette.color.copy |> Palette.withOpacity 0.7)
-            ]
-            [ text <| String.fromInt exercise.reps ++ " repetitions"
-            ]
-        , column
-            [ Font.color Palette.color.copy
-            , paddingXY 0 (Palette.scaled 2)
-            , spacing (Palette.scaled 2)
-            ]
-            (List.map
-                viewDirection
-                exercise.directions
-            )
-        ]
-
-
-viewHome : Mode -> Maybe Fitness.Exercise -> Session.Model -> List (Element Msg)
-viewHome mode maybeExercise session =
+viewHome : Mode -> Fitness.Exercise -> Session.Model -> List (Element Msg)
+viewHome mode exercise session =
     let
         ( timerColor, caption, content ) =
             if Session.working session then
@@ -169,7 +123,7 @@ viewHome mode maybeExercise session =
             else
                 ( Palette.color.free
                 , "How about some quick fitness?"
-                , viewExercise maybeExercise
+                , viewExercise exercise
                 )
 
         doneSessions =
@@ -325,7 +279,16 @@ update msg model =
             ( { model | currentSession = newSession }, cmd )
 
         ReceivedSampleExercise maybeExercise ->
-            ( { model | nextExercise = maybeExercise }, Cmd.none )
+            let
+                exercise =
+                    case maybeExercise of
+                        Just newExercise ->
+                            newExercise
+
+                        Nothing ->
+                            model.nextExercise
+            in
+            ( { model | nextExercise = exercise }, Cmd.none )
 
         UserClickedPlay ->
             ( { model | mode = Running }
@@ -352,7 +315,7 @@ init flags url key =
             , currentSession = Session.initWithConfig flags.config
             , fitnessLevel = Fitness.decodeLevel flags.config
             , exercises = flags.exercises |> Fitness.decodeExerciseInfo |> Fitness.buildExercises
-            , nextExercise = Nothing
+            , nextExercise = Fitness.defaultExercise
             }
     in
     ( model
