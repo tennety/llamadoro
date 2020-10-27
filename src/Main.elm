@@ -17,6 +17,7 @@ import Random.Array
 import Route exposing (Route(..))
 import Session
 import Session.Actions as SessionActions exposing (Action(..))
+import Session.Timer
 import Task
 import Time
 import Url exposing (Url)
@@ -135,7 +136,7 @@ viewHome mode exercise session =
         , height fill
         , width fill
         ]
-        [ View.timer timerColor (Session.timeRemainingMinSec session)
+        [ Session.view session
         , row
             [ centerX
             , width fill

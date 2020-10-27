@@ -4,8 +4,8 @@ module Session exposing
     , onBreak
     , reset
     , setStartTime
-    , timeRemainingMinSec
     , update
+    , view
     , withLongBreakAfterCount
     , withLongInterval
     , withShortInterval
@@ -15,11 +15,15 @@ module Session exposing
     )
 
 import Basics
+import Browser.Dom exposing (Element)
 import Duration exposing (Duration)
+import Element exposing (Element)
 import Json.Decode as Decode exposing (Decoder, decodeValue, int)
 import Json.Decode.Pipeline exposing (required)
+import Palette
 import Quantity
 import Session.Actions exposing (Action(..), Activity(..), IntervalLength(..))
+import Session.Timer as Timer exposing (Timer)
 import Time
 
 
@@ -33,12 +37,6 @@ type alias Config =
 
 type Session
     = Session Activity Timer
-
-
-type alias Timer =
-    { timeRemaining : Duration
-    , timeStamp : Time.Posix
-    }
 
 
 type Model
@@ -57,7 +55,11 @@ initWithConfig configJson =
 
 reset : Model -> Model
 reset (Model config count (Session _ timer)) =
-    Model config count (work timer.timeStamp config)
+    let
+        session =
+            Session Work (timer |> Timer.withDuration config.workInterval)
+    in
+    Model config count session
 
 
 initConfig : Config
@@ -111,12 +113,12 @@ withLongBreakAfterCount count (Model config count_ stage) =
 
 setStartTime : Time.Posix -> Model -> Model
 setStartTime newTime (Model config workDoneCount (Session activity timer)) =
-    Model config workDoneCount (Session activity { timer | timeStamp = newTime })
+    Model config workDoneCount (Session activity (timer |> Timer.withTimeStamp newTime))
 
 
 update : Time.Posix -> Model -> ( Model, Action )
 update newTime (Model config workDoneCount (Session activity timer)) =
-    if timedOut timer.timeRemaining then
+    if Timer.timedOut timer then
         case activity of
             Work ->
                 let
@@ -136,48 +138,22 @@ update newTime (Model config workDoneCount (Session activity timer)) =
                 ( Model config workDoneCount (work newTime config), SwitchedActivity )
 
     else
-        ( Model config workDoneCount (Session activity (countDown newTime timer)), CountedDown )
-
-
-timedOut : Duration -> Basics.Bool
-timedOut time =
-    time |> Quantity.equalWithin (Duration.seconds 0.1) Quantity.zero
-
-
-countDown : Time.Posix -> Timer -> Timer
-countDown newTime timer =
-    let
-        elapsed =
-            Duration.from timer.timeStamp newTime
-    in
-    { timer | timeStamp = newTime, timeRemaining = Quantity.max (Quantity.minus elapsed timer.timeRemaining) (Duration.seconds 0) }
+        ( Model config workDoneCount (Session activity (Timer.countDown newTime timer)), CountedDown )
 
 
 work : Time.Posix -> Config -> Session
 work timeStamp config =
-    Session Work (Timer config.workInterval timeStamp)
+    Session Work (Timer.fromDurationAndTimestamp config.workInterval timeStamp)
 
 
 shortBreak : Time.Posix -> Config -> Session
 shortBreak timeStamp config =
-    Session (Break Short) (Timer config.shortInterval timeStamp)
+    Session (Break Short) (Timer.fromDurationAndTimestamp config.shortInterval timeStamp)
 
 
 longBreak : Time.Posix -> Config -> Session
 longBreak timeStamp config =
-    Session (Break Long) (Timer config.longInterval timeStamp)
-
-
-timeRemainingMinSec : Model -> ( Int, Int )
-timeRemainingMinSec (Model _ _ (Session _ timer)) =
-    let
-        seconds =
-            timer.timeRemaining
-    in
-    ( seconds |> Duration.inMinutes
-    , seconds |> Quantity.fractionalModBy Duration.minute |> Duration.inSeconds
-    )
-        |> Tuple.mapBoth Basics.floor Basics.floor
+    Session (Break Long) (Timer.fromDurationAndTimestamp config.longInterval timeStamp)
 
 
 decoder : Decoder Config
@@ -189,12 +165,25 @@ decoder =
         |> required "longBreakAfterCount" int
 
 
-
--- initConfig.longBreakAfterCount
-
-
 durationDecoder : Decoder Duration
 durationDecoder =
     int
         |> Decode.map Basics.toFloat
         |> Decode.map Duration.seconds
+
+
+
+-- VIEW --
+
+
+view : Model -> Element msg
+view ((Model _ _ (Session activity timer)) as model) =
+    let
+        timerColor =
+            if working model then
+                Palette.color.busy
+
+            else
+                Palette.color.free
+    in
+    Timer.view timerColor timer
