@@ -282,12 +282,7 @@ update msg model =
         ReceivedSampleExercise maybeExercise ->
             let
                 exercise =
-                    case maybeExercise of
-                        Just newExercise ->
-                            newExercise
-
-                        Nothing ->
-                            model.nextExercise
+                    maybeExercise |> Maybe.withDefault model.nextExercise
             in
             ( { model | nextExercise = exercise }, Cmd.none )
 
