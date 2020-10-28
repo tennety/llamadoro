@@ -114,16 +114,14 @@ body model =
 viewHome : Mode -> Fitness.Exercise -> Session.Model -> List (Element Msg)
 viewHome mode exercise session =
     let
-        ( timerColor, caption, content ) =
+        ( caption, content ) =
             if Session.working session then
-                ( Palette.color.busy
-                , "You're llama-dorable!"
+                ( "You're llama-dorable!"
                 , Element.none
                 )
 
             else
-                ( Palette.color.free
-                , "How about some quick fitness?"
+                ( "How about some quick fitness?"
                 , viewExercise exercise
                 )
 

@@ -6,10 +6,6 @@ module Session exposing
     , setStartTime
     , update
     , view
-    , withLongBreakAfterCount
-    , withLongInterval
-    , withShortInterval
-    , withWorkInterval
     , workSessionCount
     , working
     )
@@ -35,12 +31,13 @@ type alias Config =
     }
 
 
-type Session
-    = Session Activity Timer
-
-
 type Model
-    = Model Config Int Session
+    = Model
+        { config : Config
+        , workSessionsDone : Basics.Int
+        , activity : Activity
+        , timer : Timer
+        }
 
 
 initWithConfig : Decode.Value -> Model
@@ -50,16 +47,17 @@ initWithConfig configJson =
             decodeValue decoder configJson
                 |> Result.withDefault initConfig
     in
-    Model config 0 (work (Time.millisToPosix 0) config)
+    Model
+        { config = config
+        , workSessionsDone = 0
+        , activity = Work
+        , timer = Timer.fromDurationAndTimestamp config.workInterval (Time.millisToPosix 0)
+        }
 
 
 reset : Model -> Model
-reset (Model config count (Session _ timer)) =
-    let
-        session =
-            Session Work (timer |> Timer.withDuration config.workInterval)
-    in
-    Model config count session
+reset (Model model) =
+    Model { model | timer = model.timer |> Timer.withDuration model.config.workInterval }
 
 
 initConfig : Config
@@ -77,8 +75,8 @@ onBreak =
 
 
 working : Model -> Bool
-working (Model _ _ (Session activity _)) =
-    case activity of
+working (Model model) =
+    case model.activity of
         Work ->
             Basics.True
 
@@ -87,73 +85,68 @@ working (Model _ _ (Session activity _)) =
 
 
 workSessionCount : Model -> Basics.Int
-workSessionCount (Model _ count _) =
-    count
-
-
-withWorkInterval : Duration -> Model -> Model
-withWorkInterval duration (Model config count stage) =
-    Model { config | workInterval = duration } count stage
-
-
-withShortInterval : Duration -> Model -> Model
-withShortInterval duration (Model config count stage) =
-    Model { config | shortInterval = duration } count stage
-
-
-withLongInterval : Duration -> Model -> Model
-withLongInterval duration (Model config count stage) =
-    Model { config | longInterval = duration } count stage
-
-
-withLongBreakAfterCount : Int -> Model -> Model
-withLongBreakAfterCount count (Model config count_ stage) =
-    Model { config | longBreakAfterCount = count } count_ stage
+workSessionCount (Model model) =
+    model.workSessionsDone
 
 
 setStartTime : Time.Posix -> Model -> Model
-setStartTime newTime (Model config workDoneCount (Session activity timer)) =
-    Model config workDoneCount (Session activity (timer |> Timer.withTimeStamp newTime))
+setStartTime newTime (Model model) =
+    Model { model | timer = model.timer |> Timer.withTimeStamp newTime }
 
 
 update : Time.Posix -> Model -> ( Model, Action )
-update newTime (Model config workDoneCount (Session activity timer)) =
-    if Timer.timedOut timer then
-        case activity of
+update newTime (Model model) =
+    if Timer.timedOut model.timer then
+        case model.activity of
             Work ->
                 let
-                    readyFor =
-                        Model config (workDoneCount + 1)
+                    workDoneCount =
+                        model.workSessionsDone + 1
+
+                    nextModel =
+                        Model { model | workSessionsDone = workDoneCount }
 
                     needsLongBreak =
-                        Basics.modBy config.longBreakAfterCount (workDoneCount + 1) == 0
+                        Basics.modBy model.config.longBreakAfterCount workDoneCount == 0
                 in
                 if needsLongBreak then
-                    ( readyFor (longBreak newTime config), SwitchedActivity )
+                    ( longBreak newTime nextModel, SwitchedActivity )
 
                 else
-                    ( readyFor (shortBreak newTime config), SwitchedActivity )
+                    ( shortBreak newTime nextModel, SwitchedActivity )
 
             Break _ ->
-                ( Model config workDoneCount (work newTime config), SwitchedActivity )
+                ( work newTime (Model model), SwitchedActivity )
 
     else
-        ( Model config workDoneCount (Session activity (Timer.countDown newTime timer)), CountedDown )
+        ( Model { model | timer = Timer.countDown newTime model.timer }, CountedDown )
 
 
-work : Time.Posix -> Config -> Session
-work timeStamp config =
-    Session Work (Timer.fromDurationAndTimestamp config.workInterval timeStamp)
+work : Time.Posix -> Model -> Model
+work timeStamp (Model model) =
+    Model
+        { model
+            | activity = Work
+            , timer = Timer.fromDurationAndTimestamp model.config.workInterval timeStamp
+        }
 
 
-shortBreak : Time.Posix -> Config -> Session
-shortBreak timeStamp config =
-    Session (Break Short) (Timer.fromDurationAndTimestamp config.shortInterval timeStamp)
+shortBreak : Time.Posix -> Model -> Model
+shortBreak timeStamp (Model model) =
+    Model
+        { model
+            | activity = Break Short
+            , timer = Timer.fromDurationAndTimestamp model.config.shortInterval timeStamp
+        }
 
 
-longBreak : Time.Posix -> Config -> Session
-longBreak timeStamp config =
-    Session (Break Long) (Timer.fromDurationAndTimestamp config.longInterval timeStamp)
+longBreak : Time.Posix -> Model -> Model
+longBreak timeStamp (Model model) =
+    Model
+        { model
+            | activity = Break Long
+            , timer = Timer.fromDurationAndTimestamp model.config.longInterval timeStamp
+        }
 
 
 decoder : Decoder Config
@@ -177,13 +170,13 @@ durationDecoder =
 
 
 view : Model -> Element msg
-view ((Model _ _ (Session activity timer)) as model) =
+view (Model model) =
     let
         timerColor =
-            if working model then
+            if working (Model model) then
                 Palette.color.busy
 
             else
                 Palette.color.free
     in
-    Timer.view timerColor timer
+    Timer.view timerColor model.timer
