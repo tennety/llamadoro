@@ -1,7 +1,7 @@
 module Session exposing
-    ( Model
+    ( Activity(..)
+    , Model
     , initWithConfig
-    , onBreak
     , reset
     , setStartTime
     , update
@@ -11,14 +11,12 @@ module Session exposing
     )
 
 import Basics
-import Browser.Dom exposing (Element)
 import Duration exposing (Duration)
 import Element exposing (Element)
 import Json.Decode as Decode exposing (Decoder, decodeValue, int)
 import Json.Decode.Pipeline exposing (required)
 import Palette
 import Quantity
-import Session.Actions exposing (Action(..), Activity(..), IntervalLength(..))
 import Session.Timer as Timer exposing (Timer)
 import Time
 
@@ -28,6 +26,22 @@ type alias Config =
     , shortInterval : Duration
     , longInterval : Duration
     , longBreakAfterCount : Int
+    }
+
+
+type Activity
+    = Work
+    | Break IntervalLength
+
+
+type IntervalLength
+    = Short
+    | Long
+
+
+type alias Handler msg =
+    { onCountDown : msg
+    , onSwitchedActivity : Activity -> msg
     }
 
 
@@ -57,7 +71,11 @@ initWithConfig configJson =
 
 reset : Model -> Model
 reset (Model model) =
-    Model { model | timer = model.timer |> Timer.withDuration model.config.workInterval }
+    Model
+        { model
+            | timer = model.timer |> Timer.withDuration model.config.workInterval
+            , activity = Work
+        }
 
 
 initConfig : Config
@@ -67,11 +85,6 @@ initConfig =
     , shortInterval = Duration.minutes 5
     , longBreakAfterCount = 4
     }
-
-
-onBreak : Model -> Bool
-onBreak =
-    Basics.not << working
 
 
 working : Model -> Bool
@@ -94,8 +107,8 @@ setStartTime newTime (Model model) =
     Model { model | timer = model.timer |> Timer.withTimeStamp newTime }
 
 
-update : Time.Posix -> Model -> ( Model, Action )
-update newTime (Model model) =
+update : Handler msg -> Time.Posix -> Model -> ( Model, msg )
+update handler newTime (Model model) =
     if Timer.timedOut model.timer then
         case model.activity of
             Work ->
@@ -110,43 +123,42 @@ update newTime (Model model) =
                         Basics.modBy model.config.longBreakAfterCount workDoneCount == 0
                 in
                 if needsLongBreak then
-                    ( longBreak newTime nextModel, SwitchedActivity )
+                    setActivity (Break Long) handler.onSwitchedActivity newTime nextModel
 
                 else
-                    ( shortBreak newTime nextModel, SwitchedActivity )
+                    setActivity (Break Short) handler.onSwitchedActivity newTime nextModel
 
             Break _ ->
-                ( work newTime (Model model), SwitchedActivity )
+                setActivity Work handler.onSwitchedActivity newTime (Model model)
 
     else
-        ( Model { model | timer = Timer.countDown newTime model.timer }, CountedDown )
+        ( Model { model | timer = Timer.countDown newTime model.timer }, handler.onCountDown )
 
 
-work : Time.Posix -> Model -> Model
-work timeStamp (Model model) =
-    Model
+configInterval : Activity -> Config -> Duration
+configInterval activity config =
+    case activity of
+        Work ->
+            config.workInterval
+
+        Break interval ->
+            case interval of
+                Long ->
+                    config.longInterval
+
+                Short ->
+                    config.shortInterval
+
+
+setActivity : Activity -> (Activity -> msg) -> Time.Posix -> Model -> ( Model, msg )
+setActivity activity announceSwitch timeStamp (Model model) =
+    ( Model
         { model
-            | activity = Work
-            , timer = Timer.fromDurationAndTimestamp model.config.workInterval timeStamp
+            | activity = activity
+            , timer = Timer.fromDurationAndTimestamp (configInterval activity model.config) timeStamp
         }
-
-
-shortBreak : Time.Posix -> Model -> Model
-shortBreak timeStamp (Model model) =
-    Model
-        { model
-            | activity = Break Short
-            , timer = Timer.fromDurationAndTimestamp model.config.shortInterval timeStamp
-        }
-
-
-longBreak : Time.Posix -> Model -> Model
-longBreak timeStamp (Model model) =
-    Model
-        { model
-            | activity = Break Long
-            , timer = Timer.fromDurationAndTimestamp model.config.longInterval timeStamp
-        }
+    , announceSwitch activity
+    )
 
 
 decoder : Decoder Config

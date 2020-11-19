@@ -15,8 +15,7 @@ import Palette
 import Random
 import Random.Array
 import Route exposing (Route(..))
-import Session
-import Session.Actions as SessionActions exposing (Action(..))
+import Session exposing (Activity(..))
 import Session.Timer
 import Task
 import Time
@@ -59,6 +58,11 @@ type Msg
     | UserClickedPause
     | UserClickedPlay
     | UserClickedReset
+
+
+type Action
+    = CountedDown
+    | SwitchedActivity Activity
 
 
 main : Program Flags Model Msg
@@ -261,19 +265,20 @@ update msg model =
         ReceivedTick timeStamp ->
             let
                 ( newSession, action ) =
-                    Session.update timeStamp model.currentSession
+                    Session.update { onCountDown = CountedDown, onSwitchedActivity = SwitchedActivity } timeStamp model.currentSession
 
                 cmd =
                     case action of
-                        SessionActions.CountedDown ->
+                        CountedDown ->
                             Cmd.none
 
-                        SessionActions.SwitchedActivity ->
-                            if Session.onBreak newSession then
-                                fetchNextExercise model.fitnessLevel model.exercises
+                        SwitchedActivity activity ->
+                            case activity of
+                                Break _ ->
+                                    fetchNextExercise model.fitnessLevel model.exercises
 
-                            else
-                                Cmd.none
+                                Work ->
+                                    Cmd.none
             in
             ( { model | currentSession = newSession }, cmd )
 
