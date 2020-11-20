@@ -7,7 +7,7 @@ import Element.Border as Border
 import Element.Font as Font
 import Element.Input as Input
 import Element.Region as Region
-import Fitness
+import Fitness exposing (viewExercise)
 import Heroicons.Solid exposing (pause, play, stop)
 import Html exposing (Html)
 import Json.Decode as Decode
@@ -15,8 +15,8 @@ import Palette
 import Random
 import Random.Array
 import Route exposing (Route(..))
-import Session
-import Session.Actions as SessionActions exposing (Action(..))
+import Session exposing (Activity(..))
+import Session.Timer
 import Task
 import Time
 import Url exposing (Url)
@@ -45,7 +45,7 @@ type alias Model =
     , currentSession : Session.Model
     , fitnessLevel : Fitness.Level
     , exercises : Fitness.ExercisesByLevel
-    , nextExercise : Maybe Fitness.Exercise
+    , nextExercise : Fitness.Exercise
     }
 
 
@@ -58,6 +58,11 @@ type Msg
     | UserClickedPause
     | UserClickedPlay
     | UserClickedReset
+
+
+type Action
+    = CountedDown
+    | SwitchedActivity Activity
 
 
 main : Program Flags Model Msg
@@ -110,66 +115,18 @@ body model =
                     View.notFound
 
 
-viewDirection direction =
-    paragraph
-        [ Font.color Palette.color.copy
-        , Font.size (Palette.scaled 2)
-        ]
-        [ text direction ]
-
-
-viewExercise : Maybe Fitness.Exercise -> Element Msg
-viewExercise maybeExercise =
+viewHome : Mode -> Fitness.Exercise -> Session.Model -> List (Element Msg)
+viewHome mode exercise session =
     let
-        exercise =
-            maybeExercise |> Maybe.withDefault Fitness.defaultExercise
-    in
-    textColumn
-        [ width fill
-        , height fill
-        , padding (Palette.scaled 2)
-        , Font.family Palette.fontFamily.title
-        ]
-        [ paragraph
-            [ Region.heading 3
-            , Font.size (Palette.scaled 2)
-            , Font.family Palette.fontFamily.title
-            , Font.color Palette.color.blue
-            ]
-            [ text exercise.name
-            ]
-        , paragraph
-            [ Font.family Palette.fontFamily.title
-            , Font.color (Palette.color.copy |> Palette.withOpacity 0.7)
-            ]
-            [ text <| String.fromInt exercise.reps ++ " repetitions"
-            ]
-        , column
-            [ Font.color Palette.color.copy
-            , paddingXY 0 (Palette.scaled 2)
-            , spacing (Palette.scaled 2)
-            ]
-            (List.map
-                viewDirection
-                exercise.directions
-            )
-        ]
-
-
-viewHome : Mode -> Maybe Fitness.Exercise -> Session.Model -> List (Element Msg)
-viewHome mode maybeExercise session =
-    let
-        ( timerColor, caption, content ) =
+        ( caption, content ) =
             if Session.working session then
-                ( Palette.color.busy
-                , "You're llama-dorable!"
+                ( "You're llama-dorable!"
                 , Element.none
                 )
 
             else
-                ( Palette.color.free
-                , "How about some quick fitness?"
-                , viewExercise maybeExercise
+                ( "How about some quick fitness?"
+                , viewExercise exercise
                 )
 
         doneSessions =
@@ -181,7 +138,7 @@ viewHome mode maybeExercise session =
         , height fill
         , width fill
         ]
-        [ View.timer timerColor (Session.timeRemainingMinSec session)
+        [ Session.view session
         , row
             [ centerX
             , width fill
@@ -308,24 +265,29 @@ update msg model =
         ReceivedTick timeStamp ->
             let
                 ( newSession, action ) =
-                    Session.update timeStamp model.currentSession
+                    Session.update { onCountDown = CountedDown, onSwitchedActivity = SwitchedActivity } timeStamp model.currentSession
 
                 cmd =
                     case action of
-                        SessionActions.CountedDown ->
+                        CountedDown ->
                             Cmd.none
 
-                        SessionActions.SwitchedActivity ->
-                            if Session.onBreak newSession then
-                                fetchNextExercise model.fitnessLevel model.exercises
+                        SwitchedActivity activity ->
+                            case activity of
+                                Break _ ->
+                                    fetchNextExercise model.fitnessLevel model.exercises
 
-                            else
-                                Cmd.none
+                                Work ->
+                                    Cmd.none
             in
             ( { model | currentSession = newSession }, cmd )
 
         ReceivedSampleExercise maybeExercise ->
-            ( { model | nextExercise = maybeExercise }, Cmd.none )
+            let
+                exercise =
+                    maybeExercise |> Maybe.withDefault model.nextExercise
+            in
+            ( { model | nextExercise = exercise }, Cmd.none )
 
         UserClickedPlay ->
             ( { model | mode = Running }
@@ -352,7 +314,7 @@ init flags url key =
             , currentSession = Session.initWithConfig flags.config
             , fitnessLevel = Fitness.decodeLevel flags.config
             , exercises = flags.exercises |> Fitness.decodeExerciseInfo |> Fitness.buildExercises
-            , nextExercise = Nothing
+            , nextExercise = Fitness.defaultExercise
             }
     in
     ( model

@@ -3,7 +3,6 @@ module View exposing
     , header
     , heading
     , notFound
-    , timer
     , workCountLlama
     )
 
@@ -66,38 +65,6 @@ notFound =
 
 
 -- MISC
-
-
-timer : Element.Color -> ( Int, Int ) -> Element msg
-timer activityColor ( mins, secs ) =
-    row
-        [ Font.family Palette.fontFamily.display
-        , Font.size (Palette.scaled 8)
-        , Font.medium
-        , Font.color activityColor
-        , centerX
-        , width fill
-        , Region.description <| String.fromInt mins ++ " minutes remaining."
-        ]
-        [ el
-            [ width (fillPortion 1)
-            , Font.alignRight
-            ]
-            (mins |> String.fromInt |> String.padLeft 2 '0' |> text)
-        , el
-            [ width shrink
-            , paddingXY 5 0
-            , Font.size (Palette.scaled 7)
-            , Font.center
-            , alignTop
-            ]
-            (text ":")
-        , el
-            [ width (fillPortion 1)
-            , Font.alignLeft
-            ]
-            (secs |> String.fromInt |> String.padLeft 2 '0' |> text)
-        ]
 
 
 heading : Int -> List (Element msg) -> Element msg
